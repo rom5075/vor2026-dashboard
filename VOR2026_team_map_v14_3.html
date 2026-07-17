@@ -41,7 +41,7 @@ table.who th,table.who td{border:1px solid var(--border);padding:7px 10px;text-a
 table.who th{background:var(--accent);color:#fff}
 .chip{display:inline-block;padding:2px 9px;border-radius:10px;color:#fff;font-size:11.5px;font-weight:600;margin:1px 3px 1px 0}
 .gantt{position:relative;overflow-x:auto}
-.gwrap{position:relative;min-width:1150px}
+.gwrap{position:relative;min-width:1500px}
 .grow{display:flex;align-items:center;height:34px;position:relative}
 .gname{width:180px;min-width:180px;font-size:12.5px;font-weight:600;padding-right:8px;line-height:1.25}
 .gname small{display:block;font-weight:500;color:var(--muted);font-size:10.5px}
@@ -98,7 +98,7 @@ table.who th{background:var(--accent);color:#fff}
   <h1>VOR 2026 — карта работ команды</h1>
   <div class="tab" id="themeBtn">🌙 Тёмная тема</div>
 </div>
-<div class="sub">Рабочий план v14 · общий финиш проекта 01.12.2026 · линия «сегодня» и дедлайны доработок на гантте</div>
+<div class="sub">Рабочий план v14 · общий финиш плана 01.12.2026 · дедлайны Д1–Д5 на гантте (карта до апр. 2027) · линия «сегодня»</div>
 <div class="tabs-wrap">
   <div class="tabs-row" id="tabsPeople"><span class="tabs-label">По сотрудникам</span></div>
   <div class="tabs-row" id="tabsMain"><span class="tabs-label">Остальное</span></div>
@@ -114,7 +114,8 @@ const BSHORT = {B1:'Доработка 1',B2:'Доработка 2',B3:'Дора
 const PEOPLE_ORDER = ['SQL Developer 1','SQL Developer 2','Backend Developer','Frontend Developer','Systems Engineer','Analyst 1','Analyst 2'];
 const BLOCKS = ['B1','B2','B3','B4','B5'];
 const D0 = new Date(2026,6,1);   // local Jul 1 2026
-const D1 = new Date(2026,11,15); // local Dec 15 2026
+// Horizon covers all block deadlines incl. B2 2027-02-28 and B3 2027-03-31
+const D1 = new Date(2027,3,5);   // local Apr 5 2027
 const SPAN = D1 - D0;
 const DAY = 86400000;
 
@@ -212,8 +213,10 @@ function activateTab(id){
 
 // ---- gantt builder ----
 const MONTHS = [
-  ['2026-07-01','Июль'],['2026-08-01','Август'],['2026-09-01','Сентябрь'],
-  ['2026-10-01','Октябрь'],['2026-11-01','Ноябрь'],['2026-12-01','Декабрь']
+  ['2026-07-01','Июл'],['2026-08-01','Авг'],['2026-09-01','Сен'],
+  ['2026-10-01','Окт'],['2026-11-01','Ноя'],['2026-12-01','Дек'],
+  ['2027-01-01',"Янв'27"],['2027-02-01',"Фев'27"],['2027-03-01',"Мар'27"],
+  ['2027-04-01',"Апр'27"]
 ];
 
 function monthsHeaderHtml(){
@@ -257,16 +260,16 @@ function deadlinesInRangeHtml(blocksFilter, opts={}){
   const dates = Object.keys(byDate).sort();
   dates.forEach((d, di) => {
     const blocks = byDate[d];
-    const label = blocks.map(b => BSHORT[b].replace('Доработка ','Д')+' · '+fmt(d)).join(' · ');
+    const label = blocks.map(b => BSHORT[b].replace('Доработка ','Д')+' · '+fmtY(d)).join(' · ');
     const col = blocks.length===1 ? BHEX[blocks[0]] : '#5D4037';
     // slight vertical stagger when multiple distinct dates so labels don't collide
-    h += vlineHtml('dl', d, label, col, 2 + (di % 3) * 14);
+    h += vlineHtml('dl', d, label, col, 2 + (di % 4) * 13);
   });
   if (opts.projectFinish){
     const pf = opts.projectFinish;
     const p = pct(pf);
     if (p >= 0 && p <= 100){
-      h += vlineHtml('proj', pf, 'Финиш плана · '+fmt(pf), '#6A1B9A', 2);
+      h += vlineHtml('proj', pf, 'Финиш плана · '+fmtY(pf), '#6A1B9A', 2);
     }
   }
   return h;
@@ -280,10 +283,10 @@ function deadlineLegendHtml(blocksFilter, opts={}){
     const d = DATA.deadlines[b];
     if (!d) continue;
     const p = pct(d);
-    const out = (p < 0 || p > 100);
-    h += '<span title="'+(out?'вне горизонта гантта':'на диаграмме')+'">'+
+    const onChart = p >= 0 && p <= 100;
+    h += '<span title="'+(onChart?'линия на гантте':'вне горизонта гантта')+'">'+
       '<span class="sw" style="border-top-color:'+BHEX[b]+'"></span>'+
-      BSHORT[b]+': '+fmtY(d)+(out?' (вне карты)':'')+'</span>';
+      '<b>'+BSHORT[b]+'</b>: '+fmtY(d)+(onChart?'':' (вне карты)')+'</span>';
   }
   if (opts.projectFinish){
     h += '<span><span class="sw" style="border-top-color:#6A1B9A;border-top-style:solid"></span>Финиш плана: '+fmtY(opts.projectFinish)+'</span>';
@@ -356,10 +359,10 @@ const ov = addPanel('ov'); ov.classList.add('active');
     return {key:k, label:esc(p.fio), sub:p.role, tasks:p.tasks};
   });
 
-  let g = '<div class="card"><h2>Календарная карта: июль — декабрь 2026</h2>';
+  let g = '<div class="card"><h2>Календарная карта: июль 2026 — апрель 2027</h2>';
   g += deadlineLegendHtml(BLOCKS, {projectFinish:'2026-12-01'});
   g += '<div id="ovGantt">'+buildGantt(rows,{deadlines:true, projectFinish:'2026-12-01', id:'ovGwrap', barLabel:'block'})+'</div>';
-  g += '<div class="note">Красная сплошная — сегодня. Цветные пунктиры — дедлайны доработок на карте (Д4/Д5 30.09.2026, Д1 31.10.2026). Фиолетовая сплошная — общий финиш плана 01.12.2026. Д2 28.02.2027 и Д3 31.03.2027 вне горизонта (июль–дек 2026) — только в легенде. Зависимости задач — в текстовых списках на вкладках доработок, без стрелок на гантте.</div></div>';
+  g += '<div class="note">Красная сплошная — сегодня. Цветные пунктиры — дедлайны всех доработок: Д4/Д5 30.09.2026, Д1 31.10.2026, Д2 28.02.2027, Д3 31.03.2027. Фиолетовая сплошная — финиш плана команды 01.12.2026. Зависимости — в текстовых списках на вкладках доработок.</div></div>';
   ov.innerHTML = lg + g;
 })();
 
@@ -371,6 +374,14 @@ const nowPan = addPanel('now');
   const today = todayLocal();
   const weekEnd = new Date(today.getTime() + 7*DAY);
   const weekStart = today;
+
+  // «Сейчас / эта неделя» — только delivery-роли; аналитиков не показываем
+  function isAnalystTask(t){
+    const role = t._role || '';
+    if (role === 'Analyst 1' || role === 'Analyst 2') return true;
+    const res = t.res || [];
+    return res.some(r => r && String(r).indexOf('Analyst') === 0);
+  }
 
   function overlapsWeek(t){
     const s = parseD(t.start), f = parseD(t.finish);
@@ -387,20 +398,17 @@ const nowPan = addPanel('now');
   function latePlan(t){
     return parseD(t.finish) < today;
   }
-  function startsSoon(t){
-    const s = parseD(t.start);
-    return s > today && s <= weekEnd;
-  }
 
-  const active = DATA.tasks.filter(activeToday).sort((a,b)=>parseD(a.start)-parseD(b.start));
-  const starting = DATA.tasks.filter(t => startsThisWeek(t) && !activeToday(t)).sort((a,b)=>parseD(a.start)-parseD(b.start));
-  const late = DATA.tasks.filter(latePlan).sort((a,b)=>parseD(b.finish)-parseD(a.finish));
+  const teamTasks = DATA.tasks.filter(t => !isAnalystTask(t));
+  const active = teamTasks.filter(activeToday).sort((a,b)=>parseD(a.start)-parseD(b.start));
+  const starting = teamTasks.filter(t => startsThisWeek(t) && !activeToday(t)).sort((a,b)=>parseD(a.start)-parseD(b.start));
+  const late = teamTasks.filter(latePlan).sort((a,b)=>parseD(b.finish)-parseD(a.finish));
   // unblocked soon: preds finish before/at today and task starts this week or active
   const handoffs = [];
-  for (const t of DATA.tasks){
+  for (const t of teamTasks){
     for (const pred of (t.preds||[])){
       const from = byWbs[pred[0]];
-      if (!from) continue;
+      if (!from || isAnalystTask(from)) continue;
       if (!isCrossPerson(from, t)) continue;
       // handoff near window: pred finishes within ±14d of today or task starts this week
       const pf = parseD(from.finish);
@@ -442,7 +450,7 @@ const nowPan = addPanel('now');
   h += '<div class="box"><div class="n">'+late.length+'</div><div class="l">План finish &lt; сегодня</div></div>';
   h += '<div class="box"><div class="n">'+handoffsU.length+'</div><div class="l">Handoff между людьми (±2 нед.)</div></div>';
   h += '</div>';
-  h += '<div class="note">Статусы «готово/в работе» пока не ведутся — блоки по датам плана. «Просрочено» = плановый finish уже прошёл.</div></div>';
+  h += '<div class="note">Только delivery-роли (без аналитиков). Статусы «готово/в работе» пока не ведутся — блоки по датам плана. «Просрочено» = плановый finish уже прошёл.</div></div>';
 
   h += '<div class="cols">';
   h += '<div class="card"><div class="section-title" style="color:var(--ok)">▶ В работе (по плану сегодня)</div>';
@@ -506,7 +514,8 @@ for (const b of BLOCKS){
   h += '<div class="box"><div class="n">'+fmtY(dl)+'</div><div class="l">Дедлайн доработки</div></div>';
   h += '<div class="box"><div class="n">'+fmtY(last)+'</div><div class="l">Последний finish в плане</div></div>';
   h += '</div>';
-  if (dlOut) h += '<div class="note">Дедлайн '+fmtY(dl)+' вне горизонта гантта (июль–дек 2026) — на диаграмме не рисуется, план команды завершается раньше.</div>';
+  if (dlOut) h += '<div class="note">Дедлайн '+fmtY(dl)+' вне горизонта гантта — на диаграмме не рисуется.</div>';
+  else if (dl) h += '<div class="note">Дедлайн доработки: <b style="color:'+BHEX[b]+'">'+fmtY(dl)+'</b> — пунктир на гантте ниже.</div>';
   h += '</div>';
 
   h += '<div class="card"><h2>Гантт по доработке</h2>';
