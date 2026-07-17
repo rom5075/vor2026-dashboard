@@ -40,8 +40,8 @@ jobs:
             echo "No dashboard HTML found" >&2
             exit 1
           fi
-          # Optional assets (css/js/img) if added later
-          for f in favicon.ico robots.txt; do
+          # Static assets (favicon, etc.)
+          for f in favicon.ico favicon.svg favicon-16.png favicon-32.png apple-touch-icon.png robots.txt; do
             [ -f "$f" ] && cp "$f" _site/
           done
           echo "Site files:"
