@@ -23,7 +23,9 @@
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;transition:background .2s,color .2s}
 h1{font-size:21px;margin-bottom:4px}
 .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
-.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tabs-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.tabs-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tabs-label{font-size:12px;font-weight:700;color:var(--muted);margin-right:4px;white-space:nowrap;text-transform:uppercase;letter-spacing:.02em}
 .tab{padding:7px 14px;border-radius:6px;background:var(--tabbg);border:1px solid var(--tabborder);cursor:pointer;font-size:13px;user-select:none;color:var(--text)}
 .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .tab.btab{border-left:4px solid #999}
@@ -48,13 +50,16 @@ table.who th{background:var(--accent);color:#fff}
 .gbar:hover{outline:2px solid var(--hover);z-index:5}
 .months{display:flex;margin-left:180px;font-size:11px;color:var(--meta);border-bottom:1px solid var(--border);margin-bottom:6px}
 .mcell{border-left:1px solid var(--border);padding:2px 4px}
-.vline{position:absolute;top:28px;bottom:0;width:0;z-index:7;pointer-events:none}
-.vline.today{border-left:2px solid #E53935;opacity:.9}
-.vline.dl{border-left:2px dashed;opacity:.75}
-.vline span{position:absolute;top:0;left:4px;font-size:9.5px;white-space:nowrap;font-weight:700;background:var(--card);padding:1px 5px;border-radius:3px}
-.vline.today span{color:#E53935;box-shadow:0 0 0 1px rgba(229,57,53,.25)}
+.vline{position:absolute;top:22px;bottom:0;width:0;z-index:8;pointer-events:none}
+.vline.today{border-left:2px solid #E53935;opacity:.95}
+.vline.dl{border-left:2px dashed;opacity:.95}
+.vline.proj{border-left:2px solid;opacity:.95}
+.vline span{position:absolute;top:0;left:4px;font-size:10px;white-space:nowrap;font-weight:700;background:var(--card);padding:1px 6px;border-radius:3px;box-shadow:0 0 0 1px var(--border);max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.vline.today span{color:#E53935;box-shadow:0 0 0 1px rgba(229,57,53,.35)}
 .vline.today::before{content:'';position:absolute;top:-3px;left:-4px;width:6px;height:6px;border-radius:50%;background:#E53935}
-.g-arrows{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
+.vline.dl::before,.vline.proj::before{content:'';position:absolute;top:-2px;left:-4px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid currentColor}
+.dl-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:8px 0 4px;font-size:11.5px;color:var(--meta)}
+.dl-legend .sw{width:12px;height:0;border-top:2px dashed;display:inline-block;vertical-align:middle;margin-right:5px}
 .route{list-style:none}
 .route li{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
 .rnum{min-width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:2px}
@@ -93,8 +98,11 @@ table.who th{background:var(--accent);color:#fff}
   <h1>VOR 2026 — карта работ команды</h1>
   <div class="tab" id="themeBtn">🌙 Тёмная тема</div>
 </div>
-<div class="sub">Рабочий план v14 · общий финиш проекта 01.12.2026 · линия «сегодня», дедлайны доработок, зависимости-стрелки</div>
-<div class="tabs" id="tabs"></div>
+<div class="sub">Рабочий план v14 · общий финиш проекта 01.12.2026 · линия «сегодня» и дедлайны доработок на гантте</div>
+<div class="tabs-wrap">
+  <div class="tabs-row" id="tabsPeople"><span class="tabs-label">По сотрудникам</span></div>
+  <div class="tabs-row" id="tabsMain"><span class="tabs-label">Остальное</span></div>
+</div>
 <div id="panels"></div>
 <div class="tip" id="tip"></div>
 <script>
@@ -176,7 +184,8 @@ function isCrossPerson(a, b){
 }
 
 // ---- tabs ----
-const tabs = document.getElementById('tabs');
+const tabsPeople = document.getElementById('tabsPeople');
+const tabsMain = document.getElementById('tabsMain');
 const panels = document.getElementById('panels');
 function addTab(id, label, opts={}){
   const t = document.createElement('div');
@@ -185,7 +194,8 @@ function addTab(id, label, opts={}){
   t.dataset.id = id;
   if (opts.color) t.style.borderLeftColor = opts.color;
   t.onclick = () => activateTab(id);
-  tabs.appendChild(t);
+  const host = opts.row === 'people' ? tabsPeople : tabsMain;
+  host.appendChild(t);
   return t;
 }
 function addPanel(id){
@@ -198,10 +208,6 @@ function addPanel(id){
 function activateTab(id){
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.id===id));
   document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id===id));
-  // redraw arrows for visible gantts (layout ready)
-  requestAnimationFrame(() => {
-    document.querySelectorAll('#'+CSS.escape(id)+' .gwrap[data-arrows]').forEach(drawArrowsForWrap);
-  });
 }
 
 // ---- gantt builder ----
@@ -220,27 +226,69 @@ function monthsHeaderHtml(){
   return h+'</div>';
 }
 
-function vlineHtml(kind, dateStr, label, color){
+function vlineHtml(kind, dateStr, label, color, labelTopPx){
   const p = pct(dateStr);
-  if (p<=0 || p>=100) return '';
-  const left = 'calc(180px + (100% - 180px) * '+p+'/100)';
+  // allow near-edges; only skip truly outside the chart span
+  if (p < 0 || p > 100) return '';
+  const pClamped = Math.max(0.15, Math.min(99.85, p));
+  // align with .gname (180px) + track — use % of full wrap via calc with unit-safe form
+  const left = 'calc(180px + (100% - 180px) * '+(pClamped/100).toFixed(6)+')';
   const col = color || (kind==='today' ? '#E53935' : '#C00');
-  const cls = kind==='today' ? 'vline today' : 'vline dl';
-  return '<div class="'+cls+'" style="left:'+left+';'+(kind==='today'?'':';border-left-color:'+col)+
-    '" title="'+esc(label)+'"><span style="color:'+col+'">'+esc(label)+'</span></div>';
+  let cls = 'vline dl';
+  if (kind==='today') cls = 'vline today';
+  else if (kind==='proj') cls = 'vline proj';
+  const topOff = (labelTopPx!=null) ? 'top:'+labelTopPx+'px;' : '';
+  return '<div class="'+cls+'" style="left:'+left+';'+(kind==='today'?'':';border-left-color:'+col+';color:'+col)+
+    '" title="'+esc(label)+'"><span style="color:'+col+';'+topOff+'">'+esc(label)+'</span></div>';
 }
 
-function deadlinesInRangeHtml(blocksFilter){
+function deadlinesInRangeHtml(blocksFilter, opts={}){
   let h = '';
   const list = blocksFilter || BLOCKS;
+  // group same-date deadlines so labels don't fully hide each other
+  const byDate = {};
   for (const b of list){
     const d = DATA.deadlines[b];
     if (!d) continue;
     const p = pct(d);
-    if (p<=0 || p>=100) continue; // outside chart
-    h += vlineHtml('dl', d, BSHORT[b]+' · '+fmt(d), BHEX[b]);
+    if (p < 0 || p > 100) continue;
+    (byDate[d] = byDate[d] || []).push(b);
   }
-  // note: out-of-range deadlines listed separately by caller
+  const dates = Object.keys(byDate).sort();
+  dates.forEach((d, di) => {
+    const blocks = byDate[d];
+    const label = blocks.map(b => BSHORT[b].replace('Доработка ','Д')+' · '+fmt(d)).join(' · ');
+    const col = blocks.length===1 ? BHEX[blocks[0]] : '#5D4037';
+    // slight vertical stagger when multiple distinct dates so labels don't collide
+    h += vlineHtml('dl', d, label, col, 2 + (di % 3) * 14);
+  });
+  if (opts.projectFinish){
+    const pf = opts.projectFinish;
+    const p = pct(pf);
+    if (p >= 0 && p <= 100){
+      h += vlineHtml('proj', pf, 'Финиш плана · '+fmt(pf), '#6A1B9A', 2);
+    }
+  }
+  return h;
+}
+
+function deadlineLegendHtml(blocksFilter, opts={}){
+  const list = blocksFilter || BLOCKS;
+  let h = '<div class="dl-legend">';
+  h += '<span><span class="sw" style="border-top-color:#E53935;border-top-style:solid"></span>Сегодня</span>';
+  for (const b of list){
+    const d = DATA.deadlines[b];
+    if (!d) continue;
+    const p = pct(d);
+    const out = (p < 0 || p > 100);
+    h += '<span title="'+(out?'вне горизонта гантта':'на диаграмме')+'">'+
+      '<span class="sw" style="border-top-color:'+BHEX[b]+'"></span>'+
+      BSHORT[b]+': '+fmtY(d)+(out?' (вне карты)':'')+'</span>';
+  }
+  if (opts.projectFinish){
+    h += '<span><span class="sw" style="border-top-color:#6A1B9A;border-top-style:solid"></span>Финиш плана: '+fmtY(opts.projectFinish)+'</span>';
+  }
+  h += '</div>';
   return h;
 }
 
@@ -252,17 +300,13 @@ function todayLineHtml(){
 
 /**
  * rows: [{key, label, sub, tasks:[]}]
- * opts: {arrows:'cross'|'all'|'none', deadlines:bool|array of blocks, id}
+ * opts: {deadlines:bool|array of blocks, projectFinish:string, id, barLabel}
+ * Стрелки зависимостей на гантте отключены (перегружали визуал).
  */
 function buildGantt(rows, opts={}){
-  const mode = opts.arrows || 'none';
   const wrapId = opts.id || ('g'+Math.random().toString(36).slice(2,8));
-  let html = '<div class="gantt"><div class="gwrap" id="'+wrapId+'" data-arrows="'+mode+'">';
+  let html = '<div class="gantt"><div class="gwrap" id="'+wrapId+'">';
   html += monthsHeaderHtml();
-
-  // collect edges for later
-  const edgePairs = [];
-  const barMeta = {}; // wbs -> {row, startPct, endPct}
 
   rows.forEach((row, ri) => {
     html += '<div class="grow" data-row="'+ri+'"><div class="gname">'+row.label+
@@ -271,79 +315,22 @@ function buildGantt(rows, opts={}){
       const l = pct(t.start);
       const r = pct(t.finish) + (100/168);
       const w = Math.max(0.7, r-l);
-      barMeta[t.wbs] = {row:ri, left:l, right:l+w, block:t.block};
       html += '<div class="gbar" data-wbs="'+esc(t.wbs)+'" style="left:'+l+'%;width:'+w+'%;background:'+BC[t.block]+'" data-tip="'+taskTip(t).replace(/"/g,'&quot;')+'">'+
         (opts.barLabel==='wbs' ? t.wbs : t.block)+'</div>';
     }
     html += '</div></div>';
   });
 
-  // edges
-  if (mode !== 'none'){
-    for (const t of DATA.tasks){
-      for (const pred of (t.preds||[])){
-        const from = byWbs[pred[0]];
-        if (!from) continue;
-        if (!barMeta[from.wbs] || !barMeta[t.wbs]) continue; // both must be on chart
-        if (mode === 'cross' && !isCrossPerson(from, t)) continue;
-        edgePairs.push([from.wbs, t.wbs]);
-      }
-    }
-  }
-
   html += todayLineHtml();
   if (opts.deadlines){
     const bl = opts.deadlines === true ? BLOCKS : opts.deadlines;
-    html += deadlinesInRangeHtml(bl);
+    html += deadlinesInRangeHtml(bl, {projectFinish: opts.projectFinish});
+  } else if (opts.projectFinish){
+    html += deadlinesInRangeHtml([], {projectFinish: opts.projectFinish});
   }
 
-  html += '<svg class="g-arrows" data-edges=\''+JSON.stringify(edgePairs)+'\'></svg>';
   html += '</div></div>';
   return html;
-}
-
-function drawArrowsForWrap(wrap){
-  const svg = wrap.querySelector('.g-arrows');
-  if (!svg) return;
-  let edges = [];
-  try { edges = JSON.parse(svg.getAttribute('data-edges')||'[]'); } catch(e){}
-  const rect = wrap.getBoundingClientRect();
-  const W = wrap.scrollWidth || rect.width;
-  const H = wrap.offsetHeight;
-  svg.setAttribute('width', W);
-  svg.setAttribute('height', H);
-  svg.style.width = W+'px';
-  svg.style.height = H+'px';
-
-  // map wbs -> bar center-right / center-left in wrap coords
-  const pos = {};
-  wrap.querySelectorAll('.gbar[data-wbs]').forEach(bar => {
-    const br = bar.getBoundingClientRect();
-    const wr = wrap.getBoundingClientRect();
-    const wbs = bar.getAttribute('data-wbs');
-    pos[wbs] = {
-      x1: br.right - wr.left + wrap.scrollLeft,
-      x0: br.left - wr.left + wrap.scrollLeft,
-      y: br.top + br.height/2 - wr.top + wrap.scrollTop
-    };
-  });
-
-  let paths = '<defs><marker id="arrHead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><polygon points="0 0, 7 3.5, 0 7" fill="var(--arrow)"/></marker></defs>';
-  for (const [a,b] of edges){
-    const A = pos[a], B = pos[b];
-    if (!A || !B) continue;
-    const x1 = A.x1, y1 = A.y, x2 = B.x0, y2 = B.y;
-    const dx = Math.max(18, Math.abs(x2-x1)*0.35);
-    const d = 'M '+x1+' '+y1+' C '+(x1+dx)+' '+y1+', '+(x2-dx)+' '+y2+', '+x2+' '+y2;
-    paths += '<path d="'+d+'" fill="none" stroke="var(--arrow)" stroke-width="1.4" opacity="0.65" marker-end="url(#arrHead)"/>';
-  }
-  svg.innerHTML = paths;
-}
-
-function scheduleArrowDraw(){
-  requestAnimationFrame(() => {
-    document.querySelectorAll('.panel.active .gwrap[data-arrows]').forEach(drawArrowsForWrap);
-  });
 }
 
 // ---- overview ----
@@ -370,22 +357,10 @@ const ov = addPanel('ov'); ov.classList.add('active');
   });
 
   let g = '<div class="card"><h2>Календарная карта: июль — декабрь 2026</h2>';
-  g += '<div class="toggle-row">';
-  g += '<label><input type="radio" name="ovArr" value="cross" checked> Стрелки: только между людьми</label>';
-  g += '<label><input type="radio" name="ovArr" value="all"> Все зависимости</label>';
-  g += '<label><input type="radio" name="ovArr" value="none"> Без стрелок</label>';
-  g += '</div>';
-  g += '<div id="ovGantt">'+buildGantt(rows,{arrows:'cross', deadlines:true, id:'ovGwrap', barLabel:'block'})+'</div>';
-  g += '<div class="note">Красная сплошная — сегодня. Цветные пунктиры — дедлайны доработок (в пределах карты: Д4/Д5 30.09, Д1 31.10). Д2 28.02.27 и Д3 31.03.27 за пределами горизонта. Стрелка: предшественник → блокируемая задача.</div></div>';
+  g += deadlineLegendHtml(BLOCKS, {projectFinish:'2026-12-01'});
+  g += '<div id="ovGantt">'+buildGantt(rows,{deadlines:true, projectFinish:'2026-12-01', id:'ovGwrap', barLabel:'block'})+'</div>';
+  g += '<div class="note">Красная сплошная — сегодня. Цветные пунктиры — дедлайны доработок на карте (Д4/Д5 30.09.2026, Д1 31.10.2026). Фиолетовая сплошная — общий финиш плана 01.12.2026. Д2 28.02.2027 и Д3 31.03.2027 вне горизонта (июль–дек 2026) — только в легенде. Зависимости задач — в текстовых списках на вкладках доработок, без стрелок на гантте.</div></div>';
   ov.innerHTML = lg + g;
-
-  ov.querySelectorAll('input[name="ovArr"]').forEach(inp => {
-    inp.onchange = () => {
-      const mode = ov.querySelector('input[name="ovArr"]:checked').value;
-      document.getElementById('ovGantt').innerHTML = buildGantt(rows,{arrows:mode, deadlines:true, id:'ovGwrap', barLabel:'block'});
-      scheduleArrowDraw();
-    };
-  });
 })();
 
 // ---- NOW / THIS WEEK ----
@@ -490,13 +465,13 @@ const nowPan = addPanel('now');
       '<span class="chip" style="background:'+BC[from.block]+'">'+from.block+'</span>'+
       '<span class="who">'+esc(from._fio)+'</span>'+
       '<span class="muted">'+from.wbs+' · до '+fmtY(from.finish)+'</span>'+
-      '<span class="arr">→</span>'+
+      '<span class="arr">затем</span>'+
       '<span class="chip" style="background:'+BC[to.block]+'">'+to.block+'</span>'+
       '<span class="who">'+esc(to._fio)+'</span>'+
       '<span class="muted">'+to.wbs+' · с '+fmtY(to.start)+'</span>'+
       '</div>';
   }
-  h += '<div class="note">Стрелка: исполнитель A завершает задачу → B не может начать свою, пока A не отдаст результат.</div></div>';
+  h += '<div class="note">Связка: исполнитель A завершает задачу, B не может начать свою, пока A не отдаст результат.</div></div>';
 
   nowPan.innerHTML = h;
 })();
@@ -534,14 +509,10 @@ for (const b of BLOCKS){
   if (dlOut) h += '<div class="note">Дедлайн '+fmtY(dl)+' вне горизонта гантта (июль–дек 2026) — на диаграмме не рисуется, план команды завершается раньше.</div>';
   h += '</div>';
 
-  h += '<div class="card"><h2>Гантт по доработке + зависимости</h2>';
-  h += '<div class="toggle-row">';
-  h += '<label><input type="radio" name="arr_'+b+'" value="all" checked> Все стрелки</label>';
-  h += '<label><input type="radio" name="arr_'+b+'" value="cross"> Только между людьми</label>';
-  h += '<label><input type="radio" name="arr_'+b+'" value="none"> Без стрелок</label>';
-  h += '</div>';
-  h += '<div id="gantt_'+b+'">'+buildGantt(rows,{arrows:'all', deadlines:[b], id:'gw_'+b, barLabel:'wbs'})+'</div>';
-  h += '<div class="note">Пунктир цвета доработки — дедлайн. Стрелка от конца предшественника к началу зависимой задачи.</div></div>';
+  h += '<div class="card"><h2>Гантт по доработке</h2>';
+  h += deadlineLegendHtml([b]);
+  h += '<div id="gantt_'+b+'">'+buildGantt(rows,{deadlines:[b], id:'gw_'+b, barLabel:'wbs'})+'</div>';
+  h += '<div class="note">Пунктир цвета доработки — дедлайн (если попадает в горизонт карты). Зависимости — списком ниже, без стрелок на гантте.</div></div>';
 
   // dependency list
   const edges = [];
@@ -557,8 +528,8 @@ for (const b of BLOCKS){
   else {
     h += '<ul class="dep-list">';
     for (const e of edges){
-      const mark = e.cross ? ' <b style="color:var(--dep)">↔ handoff</b>' : '';
-      h += '<li><b>'+e.from.wbs+'</b> '+esc(e.from._fio)+' <span class="arr" style="color:var(--dep)">→</span> <b>'+e.to.wbs+'</b> '+esc(e.to._fio)+
+      const mark = e.cross ? ' <b style="color:var(--dep)">handoff</b>' : '';
+      h += '<li><b>'+e.from.wbs+'</b> '+esc(e.from._fio)+' <span class="arr" style="color:var(--dep)">затем</span> <b>'+e.to.wbs+'</b> '+esc(e.to._fio)+
         ' <span class="muted">('+fmt(e.from.finish)+' → '+fmt(e.to.start)+')</span>'+mark+'</li>';
     }
     h += '</ul>';
@@ -572,7 +543,7 @@ for (const b of BLOCKS){
     num++;
     let dep='';
     if (t.preds && t.preds.length){
-      dep = '<div class="rdep">⬅ ждёт: '+t.preds.map(p=>{
+      dep = '<div class="rdep">ждёт: '+t.preds.map(p=>{
         const pr=byWbs[p[0]];
         return (pr?pr.wbs+' ('+pr._fio+')':p[0]);
       }).join(', ')+'</div>';
@@ -580,7 +551,7 @@ for (const b of BLOCKS){
     const suc = successors(t.wbs);
     let blk='';
     if (suc.length){
-      blk = '<div class="rdep">➡ блокирует: '+suc.map(s=>s.wbs+' ('+s._fio+')').join(', ')+'</div>';
+      blk = '<div class="rdep">блокирует: '+suc.map(s=>s.wbs+' ('+s._fio+')').join(', ')+'</div>';
     }
     h += '<li><div class="rnum" style="background:'+BC[b]+'">'+num+'</div>'+
       '<div class="rbody" style="border-left-color:'+BC[b]+'">'+
@@ -591,21 +562,13 @@ for (const b of BLOCKS){
   h += '</ol></div>';
 
   pan.innerHTML = h;
-
-  pan.querySelectorAll('input[name="arr_'+b+'"]').forEach(inp => {
-    inp.onchange = () => {
-      const mode = pan.querySelector('input[name="arr_'+b+'"]:checked').value;
-      document.getElementById('gantt_'+b).innerHTML = buildGantt(rows,{arrows:mode, deadlines:[b], id:'gw_'+b, barLabel:'wbs'});
-      scheduleArrowDraw();
-    };
-  });
 }
 
 // ---- PERSON TABS ----
 for (const k of PEOPLE_ORDER){
   const p = DATA.people[k];
   const id = 'p_'+k.replace(/\s/g,'_');
-  addTab(id, p.fio.split(' ')[0]+(p.fio.split(' ')[1]?' '+p.fio.split(' ')[1][0]+'.':''));
+  addTab(id, p.fio.split(' ')[0]+(p.fio.split(' ')[1]?' '+p.fio.split(' ')[1][0]+'.':''), {row:'people'});
   const pan = addPanel(id);
   let h = '<div class="card"><b style="font-size:16px">'+esc(p.fio)+'</b> · <span style="color:var(--muted)">'+esc(p.role)+'</span>';
   h += '<div class="pinfo" style="margin-top:6px">Доработки: ';
@@ -613,8 +576,9 @@ for (const k of PEOPLE_ORDER){
   h += ' · задач: '+p.tasks.length+' · часов: '+p.tasks.reduce((s,t)=>s+t.work,0)+'</div>';
 
   // mini gantt for person
-  h += buildGantt([{key:k,label:esc(p.fio),sub:'',tasks:p.tasks}], {arrows:'none', deadlines:p.blocks, id:'pg_'+id, barLabel:'block'});
-  h += '<div class="note" style="margin-bottom:12px">На личном маршруте стрелки не рисуются (одна дорожка). Зависимости — в тексте ниже.</div>';
+  h += deadlineLegendHtml(p.blocks);
+  h += buildGantt([{key:k,label:esc(p.fio),sub:'',tasks:p.tasks}], {deadlines:p.blocks, id:'pg_'+id, barLabel:'block'});
+  h += '<div class="note" style="margin-bottom:12px">Зависимости — в тексте ниже (на гантте стрелки не рисуются).</div>';
 
   let lastBlock=null, num=0;
   h += '<ol class="route">';
@@ -626,18 +590,18 @@ for (const k of PEOPLE_ORDER){
     num++;
     let dep='';
     if (t.ext && t.ext.length){
-      dep = '<div class="rdep">⚠ ждёт: '+t.ext.map(e=>'задачу '+e.wbs+' ('+e.who+')').join(', ')+'</div>';
+      dep = '<div class="rdep">ждёт: '+t.ext.map(e=>'задачу '+e.wbs+' ('+e.who+')').join(', ')+'</div>';
     } else if (t.preds && t.preds.length){
       const cross = t.preds.map(pr=>{
         const pred=byWbs[pr[0]];
         if (!pred || pred._fio===p.fio) return null;
         return pred.wbs+' ('+pred._fio+')';
       }).filter(Boolean);
-      if (cross.length) dep = '<div class="rdep">⚠ ждёт: '+cross.join(', ')+'</div>';
+      if (cross.length) dep = '<div class="rdep">ждёт: '+cross.join(', ')+'</div>';
     }
     const suc = successors(t.wbs).filter(s => s._fio !== p.fio);
     let blk='';
-    if (suc.length) blk = '<div class="rdep">➡ отдаёт дальше: '+suc.map(s=>s.wbs+' ('+s._fio+')').join(', ')+'</div>';
+    if (suc.length) blk = '<div class="rdep">отдаёт дальше: '+suc.map(s=>s.wbs+' ('+s._fio+')').join(', ')+'</div>';
     h += '<li><div class="rnum" style="background:'+BC[t.block]+'">'+num+'</div>'+
       '<div class="rbody" style="border-left-color:'+BC[t.block]+'">'+
       '<div class="rtitle">'+esc(t.name)+'</div>'+
@@ -653,7 +617,6 @@ function applyTheme(t){
   if (t==='dark'){ document.documentElement.setAttribute('data-theme','dark'); themeBtn.textContent='☀️ Светлая тема'; }
   else { document.documentElement.removeAttribute('data-theme'); themeBtn.textContent='🌙 Тёмная тема'; }
   try{ localStorage.setItem('vor_theme',t); }catch(e){}
-  scheduleArrowDraw();
 }
 themeBtn.onclick = () => applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
 let saved=null;
@@ -672,13 +635,6 @@ document.addEventListener('mousemove', e => {
   tip.style.left = Math.min(window.innerWidth-420, e.clientX+14)+'px';
   tip.style.top = (e.clientY+16)+'px';
 });
-
-// redraw arrows on resize / first paint
-window.addEventListener('resize', scheduleArrowDraw);
-scheduleArrowDraw();
-// late paint after fonts/layout
-setTimeout(scheduleArrowDraw, 100);
-setTimeout(scheduleArrowDraw, 400);
 </script>
 </body>
 </html>
