@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VOR 2026 — карта работ команды (план v14)</title>
 <style>
 :root{
@@ -9,12 +10,14 @@
   --bg:#F5F6FA;--text:#222;--card:#fff;--muted:#666;--meta:#555;
   --border:#ddd;--border2:#e2e2e2;--track:#FAFAFC;--tabbg:#fff;--tabborder:#ccc;
   --accent:#2F5496;--dep:#B34700;--tipbg:#222;--tiptext:#fff;--hover:#222;
+  --arrow:#6B7280;--ok:#2E7D32;--warn:#E65100;--late:#C62828;
 }
 [data-theme="dark"]{
   --b1:#5B8DEF;--b2:#6FA85A;--b3:#D4A72C;--b4:#E07B39;--b5:#9AA0A6;
   --bg:#15171C;--text:#E8EAED;--card:#1F232B;--muted:#9AA0A6;--meta:#B7BCC4;
   --border:#3A3F47;--border2:#3A3F47;--track:#262B33;--tabbg:#1F232B;--tabborder:#3A3F47;
   --accent:#5B8DEF;--dep:#F0A05A;--tipbg:#E8EAED;--tiptext:#15171C;--hover:#fff;
+  --arrow:#9AA0A6;--ok:#81C784;--warn:#FFB74D;--late:#EF9A9A;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;transition:background .2s,color .2s}
@@ -23,10 +26,12 @@ h1{font-size:21px;margin-bottom:4px}
 .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
 .tab{padding:7px 14px;border-radius:6px;background:var(--tabbg);border:1px solid var(--tabborder);cursor:pointer;font-size:13px;user-select:none;color:var(--text)}
 .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tab.btab{border-left:4px solid #999}
 .panel{display:none}
 .panel.active{display:block}
 .card{background:var(--card);border-radius:8px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
-.legend{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 4px}
+.card h2{font-size:15px;margin-bottom:10px}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 4px;align-items:center}
 .legchip{display:flex;align-items:center;gap:6px;font-size:12px}
 .legchip .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
 table.who{border-collapse:collapse;width:100%;font-size:13px}
@@ -36,17 +41,20 @@ table.who th{background:var(--accent);color:#fff}
 .gantt{position:relative;overflow-x:auto}
 .gwrap{position:relative;min-width:1150px}
 .grow{display:flex;align-items:center;height:34px;position:relative}
-.gname{width:180px;min-width:180px;font-size:12.5px;font-weight:600;padding-right:8px}
+.gname{width:180px;min-width:180px;font-size:12.5px;font-weight:600;padding-right:8px;line-height:1.25}
+.gname small{display:block;font-weight:500;color:var(--muted);font-size:10.5px}
 .gtrack{position:relative;flex:1;height:26px;background:var(--track);border-radius:4px}
-.gbar{position:absolute;height:22px;top:2px;border-radius:4px;font-size:10px;color:#fff;overflow:hidden;white-space:nowrap;padding:4px 4px 0;cursor:default}
+.gbar{position:absolute;height:22px;top:2px;border-radius:4px;font-size:10px;color:#fff;overflow:hidden;white-space:nowrap;padding:4px 4px 0;cursor:default;z-index:2}
 .gbar:hover{outline:2px solid var(--hover);z-index:5}
 .months{display:flex;margin-left:180px;font-size:11px;color:var(--meta);border-bottom:1px solid var(--border);margin-bottom:6px}
 .mcell{border-left:1px solid var(--border);padding:2px 4px}
-.dl{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed #C00;opacity:.55}
-.dl span{position:absolute;top:-2px;left:3px;font-size:9.5px;color:#C00;white-space:nowrap}
-.today-line{position:absolute;top:28px;bottom:0;width:0;border-left:2px solid #E53935;z-index:8;pointer-events:none;opacity:.9}
-.today-line span{position:absolute;top:0;left:4px;font-size:10px;color:#E53935;white-space:nowrap;font-weight:700;background:var(--card);padding:1px 5px;border-radius:3px;box-shadow:0 0 0 1px rgba(229,57,53,.25)}
-.today-line::before{content:'';position:absolute;top:-3px;left:-4px;width:6px;height:6px;border-radius:50%;background:#E53935}
+.vline{position:absolute;top:28px;bottom:0;width:0;z-index:7;pointer-events:none}
+.vline.today{border-left:2px solid #E53935;opacity:.9}
+.vline.dl{border-left:2px dashed;opacity:.75}
+.vline span{position:absolute;top:0;left:4px;font-size:9.5px;white-space:nowrap;font-weight:700;background:var(--card);padding:1px 5px;border-radius:3px}
+.vline.today span{color:#E53935;box-shadow:0 0 0 1px rgba(229,57,53,.25)}
+.vline.today::before{content:'';position:absolute;top:-3px;left:-4px;width:6px;height:6px;border-radius:50%;background:#E53935}
+.g-arrows{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
 .route{list-style:none}
 .route li{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
 .rnum{min-width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;margin-top:2px}
@@ -56,146 +64,621 @@ table.who th{background:var(--accent);color:#fff}
 .rdep{font-size:11.5px;color:var(--dep);margin-top:3px}
 .blockhdr{font-size:13px;font-weight:700;margin:14px 0 8px;padding:6px 10px;border-radius:5px;color:#fff}
 .pinfo{font-size:13px;color:var(--meta);margin-bottom:10px}
-.tip{position:fixed;display:none;background:var(--tipbg);color:var(--tiptext);padding:8px 10px;border-radius:6px;font-size:12px;max-width:380px;z-index:99;pointer-events:none}
+.tip{position:fixed;display:none;background:var(--tipbg);color:var(--tiptext);padding:8px 10px;border-radius:6px;font-size:12px;max-width:400px;z-index:99;pointer-events:none;line-height:1.35}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi .box{background:var(--track);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.kpi .n{font-size:22px;font-weight:700;line-height:1.1}
+.kpi .l{font-size:11.5px;color:var(--muted);margin-top:3px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.taskrow{border:1px solid var(--border2);border-left:4px solid #999;border-radius:6px;padding:8px 10px;margin-bottom:7px;background:var(--card)}
+.taskrow .t{font-size:13px;font-weight:600}
+.taskrow .m{font-size:11.5px;color:var(--meta);margin-top:2px}
+.taskrow.late{border-left-color:var(--late)}
+.taskrow.active{border-left-color:var(--ok)}
+.taskrow.soon{border-left-color:var(--warn)}
+.handoff{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:7px;font-size:12.5px;background:var(--track)}
+.handoff .arr{color:var(--dep);font-weight:700;font-size:16px}
+.handoff .who{font-weight:600}
+.muted{color:var(--muted);font-size:12px}
+.note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.4}
+.toggle-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:6px 0 10px;font-size:12.5px}
+.toggle-row label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.dep-list{font-size:12.5px}
+.dep-list li{margin:4px 0 4px 18px}
+.section-title{font-size:14px;font-weight:700;margin:4px 0 8px}
 </style>
 </head>
 <body>
-<div style="display:flex;justify-content:space-between;align-items:center">
-<h1>VOR 2026 — карта работ команды</h1>
-<div class="tab" id="themeBtn" style="margin-left:12px">🌙 Тёмная тема</div>
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+  <h1>VOR 2026 — карта работ команды</h1>
+  <div class="tab" id="themeBtn">🌙 Тёмная тема</div>
 </div>
-<div class="sub">Рабочий план v14 · общий финиш проекта 01.12.2026 · наведи курсор на плитку, чтобы увидеть детали задачи</div>
+<div class="sub">Рабочий план v14 · общий финиш проекта 01.12.2026 · линия «сегодня», дедлайны доработок, зависимости-стрелки</div>
 <div class="tabs" id="tabs"></div>
 <div id="panels"></div>
 <div class="tip" id="tip"></div>
 <script>
 const DATA = {"tasks": [{"uid": "4", "wbs": "1.1.1.1", "block": "B1", "name": "Modification of the curvature calculation algorithm", "start": "2026-07-07", "finish": "2026-07-10", "work": 20.0, "res": ["SQL Developer 1"], "preds": []}, {"uid": "5", "wbs": "1.1.1.2", "block": "B1", "name": "Modification of the LCC, DCC calculation algorithm", "start": "2026-07-10", "finish": "2026-07-20", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.1", "1"]]}, {"uid": "6", "wbs": "1.1.1.3", "block": "B1", "name": "Modification of dependent calculations based on old and new parameters", "start": "2026-07-20", "finish": "2026-07-28", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.2", "1"]]}, {"uid": "7", "wbs": "1.1.1.4", "block": "B1", "name": "Modifications to DB objects — adding new fields to all related tables", "start": "2026-07-28", "finish": "2026-08-05", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.3", "1"]]}, {"uid": "8", "wbs": "1.1.1.5", "block": "B1", "name": "Creation and implementation of the displacement generation algorithm", "start": "2026-08-05", "finish": "2026-08-14", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.4", "1"]]}, {"uid": "9", "wbs": "1.1.1.6", "block": "B1", "name": "Ensuring selection of Displacement Lateral type anomalies", "start": "2026-08-14", "finish": "2026-08-24", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.5", "1"]]}, {"uid": "10", "wbs": "1.1.1.7", "block": "B1", "name": "Ensuring selection of Displacement Vertical type anomalies", "start": "2026-08-25", "finish": "2026-09-02", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.6", "1"]]}, {"uid": "11", "wbs": "1.1.1.8", "block": "B1", "name": "Algorithm speed optimisation (max +30% processing time increase)", "start": "2026-09-03", "finish": "2026-09-14", "work": 50.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.7", "1"]]}, {"uid": "12", "wbs": "1.1.1.9", "block": "B1", "name": "Adjustment of the Report scheme", "start": "2026-09-15", "finish": "2026-09-23", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.8", "1"]]}, {"uid": "13", "wbs": "1.1.1.10", "block": "B1", "name": "Verification of new Report schema data output", "start": "2026-09-24", "finish": "2026-09-29", "work": 24.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.9", "1"]]}, {"uid": "14", "wbs": "1.1.1.11", "block": "B1", "name": "Testing and deployment on TEST Env. (DB)", "start": "2026-09-30", "finish": "2026-10-08", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.10", "1"]]}, {"uid": "16", "wbs": "1.1.2.1", "block": "B1", "name": "Analysis of algorithm speed optimisation", "start": "2026-07-01", "finish": "2026-07-03", "work": 24.0, "res": ["Analyst 1"], "preds": []}, {"uid": "17", "wbs": "1.1.2.2", "block": "B1", "name": "Analysis of UI modifications and adjustments", "start": "2026-07-06", "finish": "2026-07-09", "work": 31.0, "res": ["Analyst 1"], "preds": [["1.1.2.1", "1"]]}, {"uid": "18", "wbs": "1.1.2.3", "block": "B1", "name": "Testing and analysis of algorithm adjustments", "start": "2026-07-10", "finish": "2026-07-17", "work": 47.0, "res": ["Analyst 1"], "preds": [["1.1.2.2", "1"]]}, {"uid": "20", "wbs": "1.1.3.1", "block": "B1", "name": "Display fields by type of Displacements (Data Matching tab)", "start": "2026-08-03", "finish": "2026-08-07", "work": 40.0, "res": ["Frontend Developer"], "preds": [["1.4.2.5", "1"]]}, {"uid": "21", "wbs": "1.1.3.2", "block": "B1", "name": "Adjusting dependencies and displaying fields by Displacement type", "start": "2026-08-10", "finish": "2026-08-13", "work": 30.0, "res": ["Frontend Developer"], "preds": [["1.1.3.1", "1"]]}, {"uid": "22", "wbs": "1.1.3.3", "block": "B1", "name": "Displaying fields with additional information (updated LCC/DCC)", "start": "2026-08-14", "finish": "2026-08-20", "work": 40.0, "res": ["Frontend Developer"], "preds": [["1.1.3.2", "1"]]}, {"uid": "23", "wbs": "1.1.3.4", "block": "B1", "name": "Testing and deployment on TEST Env. (Frontend)", "start": "2026-08-21", "finish": "2026-08-27", "work": 40.0, "res": ["Frontend Developer"], "preds": [["1.1.3.3", "1"]]}, {"uid": "25", "wbs": "1.1.4.1", "block": "B1", "name": "Deployment on UAT", "start": "2026-10-09", "finish": "2026-10-12", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.1.1.11", "1"], ["1.1.2.3", "1"], ["1.1.3.4", "1"]]}, {"uid": "26", "wbs": "1.1.4.2", "block": "B1", "name": "UAT bug fixes", "start": "2026-10-13", "finish": "2026-10-19", "work": 40.0, "res": [null], "preds": [["1.1.4.1", "1"]]}, {"uid": "27", "wbs": "1.1.4.3", "block": "B1", "name": "Deployment on Prod", "start": "2026-10-20", "finish": "2026-10-21", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.1.4.2", "1"]]}, {"uid": "30", "wbs": "1.2.1.1", "block": "B2", "name": "Database setup — design and preparation of dedicated schema", "start": "2026-08-11", "finish": "2026-08-17", "work": 40.0, "res": ["SQL Developer 2"], "preds": [["1.5.1.2", "1"]]}, {"uid": "31", "wbs": "1.2.1.2", "block": "B2", "name": "Database setup — tables, views and logging structures", "start": "2026-08-18", "finish": "2026-08-26", "work": 50.0, "res": ["SQL Developer 2"], "preds": [["1.2.1.1", "1"]]}, {"uid": "33", "wbs": "1.2.2.1", "block": "B2", "name": "UI design", "start": "2026-08-28", "finish": "2026-09-03", "work": 40.0, "res": ["Frontend Developer"], "preds": [["1.1.3.4", "1"]]}, {"uid": "34", "wbs": "1.2.2.2", "block": "B2", "name": "UI implementation for validation system and archive page", "start": "2026-09-04", "finish": "2026-09-04", "work": 6.0, "res": ["Frontend Developer"], "preds": [["1.2.2.1", "1"]]}, {"uid": "35", "wbs": "1.2.2.3", "block": "B2", "name": "Design of validation system report templates", "start": "2026-07-27", "finish": "2026-07-31", "work": 40.0, "res": ["Backend Developer"], "preds": []}, {"uid": "36", "wbs": "1.2.2.4", "block": "B2", "name": "Additional analysis of CSV files", "start": "2026-08-03", "finish": "2026-08-03", "work": 8.0, "res": ["Backend Developer"], "preds": [["1.2.2.3", "1"]]}, {"uid": "37", "wbs": "1.2.2.5", "block": "B2", "name": "Design of CSV file validation module (5PT MODEL)", "start": "2026-08-04", "finish": "2026-08-06", "work": 24.0, "res": ["Backend Developer"], "preds": [["1.2.2.4", "1"]]}, {"uid": "38", "wbs": "1.2.2.6", "block": "B2", "name": "Additional analysis of GDB files (PODS, SSDM, Engineering Features, Free Spans)", "start": "2026-08-07", "finish": "2026-08-14", "work": 48.0, "res": ["Backend Developer"], "preds": [["1.2.2.5", "1"]]}, {"uid": "39", "wbs": "1.2.2.7", "block": "B2", "name": "Design of validation module for GDB file types", "start": "2026-08-17", "finish": "2026-08-28", "work": 80.0, "res": ["Backend Developer"], "preds": [["1.2.2.6", "1"]]}, {"uid": "40", "wbs": "1.2.2.8", "block": "B2", "name": "Additional analysis of video files and accompanying data files", "start": "2026-08-31", "finish": "2026-09-04", "work": 40.0, "res": ["Backend Developer"], "preds": [["1.2.2.7", "1"]]}, {"uid": "41", "wbs": "1.2.2.9", "block": "B2", "name": "Design of validation module for video files including S3 handling", "start": "2026-09-07", "finish": "2026-09-11", "work": 40.0, "res": ["Backend Developer"], "preds": [["1.2.2.8", "1"]]}, {"uid": "42", "wbs": "1.2.2.10", "block": "B2", "name": "Additional analysis of the Digital Terrain Model", "start": "2026-09-14", "finish": "2026-09-16", "work": 24.0, "res": ["Backend Developer"], "preds": [["1.2.2.9", "1"]]}, {"uid": "43", "wbs": "1.2.2.11", "block": "B2", "name": "Design of Digital Terrain Model file validation module", "start": "2026-09-17", "finish": "2026-09-23", "work": 40.0, "res": ["Backend Developer"], "preds": [["1.2.2.10", "1"]]}, {"uid": "44", "wbs": "1.2.2.12", "block": "B2", "name": "Testing and deployment on TEST Env. (Backend + Frontend)", "start": "2026-09-24", "finish": "2026-10-05", "work": 64.0, "res": ["Backend Developer"], "preds": [["1.2.2.11", "1"]]}, {"uid": "46", "wbs": "1.2.3.1", "block": "B2", "name": "Additional analysis for logic correction", "start": "2026-07-27", "finish": "2026-08-07", "work": 80.0, "res": ["Analyst 1"], "preds": [["1.2.2.3", "3"], ["1.1.2.3", "1"]]}, {"uid": "47", "wbs": "1.2.3.2", "block": "B2", "name": "Testing and analysis of algorithm adjustments", "start": "2026-08-10", "finish": "2026-09-01", "work": 67.0, "res": ["Analyst 2"], "preds": [["1.2.3.1", "1"]]}, {"uid": "49", "wbs": "1.2.4.1", "block": "B2", "name": "Deployment on UAT", "start": "2026-10-06", "finish": "2026-10-07", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.2.2.12", "1"], ["1.2.3.2", "1"]]}, {"uid": "50", "wbs": "1.2.4.2", "block": "B2", "name": "UAT bug fixes", "start": "2026-10-08", "finish": "2026-10-14", "work": 40.0, "res": [null], "preds": [["1.2.4.1", "1"]]}, {"uid": "51", "wbs": "1.2.4.3", "block": "B2", "name": "Deployment on Prod", "start": "2026-10-15", "finish": "2026-10-16", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.2.4.2", "1"]]}, {"uid": "54", "wbs": "1.3.1.1", "block": "B3", "name": "Making changes to the auto-matching algorithm", "start": "2026-10-09", "finish": "2026-10-20", "work": 45.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.11", "1"]]}, {"uid": "55", "wbs": "1.3.1.2", "block": "B3", "name": "Making changes to the inspection confirmation algorithm", "start": "2026-10-21", "finish": "2026-10-29", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.3.1.1", "1"]]}, {"uid": "56", "wbs": "1.3.1.3", "block": "B3", "name": "Preparing views for displaying archived data for a specified kilometre range", "start": "2026-10-29", "finish": "2026-11-09", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.3.1.2", "1"]]}, {"uid": "57", "wbs": "1.3.1.4", "block": "B3", "name": "Testing and deployment on TEST Env. (DB)", "start": "2026-11-10", "finish": "2026-11-18", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.3.1.3", "1"]]}, {"uid": "59", "wbs": "1.3.2.1", "block": "B3", "name": "Additional analysis on logic adjustment", "start": "2026-10-09", "finish": "2026-11-05", "work": 150.0, "res": ["Analyst 1"], "preds": [["1.3.1.1", "3"], ["1.2.3.2", "1"]]}, {"uid": "60", "wbs": "1.3.2.2", "block": "B3", "name": "Testing", "start": "2026-11-05", "finish": "2026-11-18", "work": 35.0, "res": ["Analyst 2"], "preds": [["1.3.2.1", "1"]]}, {"uid": "62", "wbs": "1.3.3.1", "block": "B3", "name": "Displaying the new archive page, configuring filters", "start": "2026-09-07", "finish": "2026-09-10", "work": 30.0, "res": ["Frontend Developer"], "preds": [["1.2.2.2", "1"]]}, {"uid": "63", "wbs": "1.3.3.2", "block": "B3", "name": "Refining backend methods", "start": "2026-10-06", "finish": "2026-10-07", "work": 10.0, "res": ["Backend Developer"], "preds": [["1.3.3.1", "1"], ["1.2.2.12", "1"]]}, {"uid": "64", "wbs": "1.3.3.3", "block": "B3", "name": "Testing and deployment on TEST Env. (Backend + Frontend)", "start": "2026-10-08", "finish": "2026-10-08", "work": 8.0, "res": ["Backend Developer"], "preds": [["1.3.3.2", "1"]]}, {"uid": "66", "wbs": "1.3.4.1", "block": "B3", "name": "Deployment on UAT", "start": "2026-11-19", "finish": "2026-11-20", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.3.1.4", "1"], ["1.3.2.2", "1"], ["1.3.3.3", "1"]]}, {"uid": "67", "wbs": "1.3.4.2", "block": "B3", "name": "UAT bug fixes", "start": "2026-11-23", "finish": "2026-11-27", "work": 40.0, "res": [null], "preds": [["1.3.4.1", "1"]]}, {"uid": "68", "wbs": "1.3.4.3", "block": "B3", "name": "Deployment on Prod", "start": "2026-11-30", "finish": "2026-12-01", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.3.4.2", "1"]]}, {"uid": "71", "wbs": "1.4.1.1", "block": "B4", "name": "Creating database objects for logging and displaying execution status", "start": "2026-07-20", "finish": "2026-07-21", "work": 13.0, "res": ["SQL Developer 2"], "preds": []}, {"uid": "72", "wbs": "1.4.1.2", "block": "B4", "name": "Organising the logging process model", "start": "2026-07-22", "finish": "2026-07-28", "work": 40.0, "res": ["SQL Developer 2"], "preds": [["1.4.1.1", "1"]]}, {"uid": "73", "wbs": "1.4.1.3", "block": "B4", "name": "Organisation of alerts in the absence of manual comparison", "start": "2026-07-29", "finish": "2026-07-30", "work": 16.0, "res": ["SQL Developer 2"], "preds": [["1.4.1.2", "1"]]}, {"uid": "74", "wbs": "1.4.1.4", "block": "B4", "name": "Testing and deployment on TEST Env. (DB)", "start": "2026-07-31", "finish": "2026-08-05", "work": 32.0, "res": ["SQL Developer 2"], "preds": [["1.4.1.3", "1"]]}, {"uid": "76", "wbs": "1.4.2.1", "block": "B4", "name": "Adding an API to obtain the status of the data confirmation procedure", "start": "2026-07-22", "finish": "2026-07-22", "work": 8.0, "res": ["Frontend Developer"], "preds": [["1.4.1.1", "1"]]}, {"uid": "77", "wbs": "1.4.2.2", "block": "B4", "name": "Adding display of procedure status on the page", "start": "2026-07-23", "finish": "2026-07-24", "work": 12.0, "res": ["Frontend Developer"], "preds": [["1.4.2.1", "1"]]}, {"uid": "78", "wbs": "1.4.2.3", "block": "B4", "name": "Adding mechanism to block Confirm and Confirm Inspection Block buttons", "start": "2026-07-27", "finish": "2026-07-27", "work": 4.0, "res": ["Frontend Developer"], "preds": [["1.4.2.2", "1"]]}, {"uid": "79", "wbs": "1.4.2.4", "block": "B4", "name": "Implementing warning logic — pop-up in absence of manual matching", "start": "2026-07-28", "finish": "2026-07-29", "work": 16.0, "res": ["Frontend Developer"], "preds": [["1.4.2.3", "1"]]}, {"uid": "80", "wbs": "1.4.2.5", "block": "B4", "name": "Testing and deployment on TEST Env. (Backend + Frontend)", "start": "2026-07-30", "finish": "2026-07-31", "work": 10.0, "res": ["Frontend Developer"], "preds": [["1.4.2.4", "1"]]}, {"uid": "82", "wbs": "1.4.3.1", "block": "B4", "name": "Additional analysis on logic adjustment", "start": "2026-07-20", "finish": "2026-08-05", "work": 50.0, "res": ["Analyst 2"], "preds": [["1.4.1.1", "3"]]}, {"uid": "84", "wbs": "1.4.4.1", "block": "B4", "name": "Deployment on UAT", "start": "2026-08-06", "finish": "2026-08-06", "work": 8.0, "res": ["Systems Engineer"], "preds": [["1.4.1.4", "1"], ["1.4.3.1", "1"], ["1.4.2.5", "1"]]}, {"uid": "85", "wbs": "1.4.4.2", "block": "B4", "name": "UAT bug fixes", "start": "2026-08-07", "finish": "2026-08-13", "work": 40.0, "res": [null], "preds": [["1.4.4.1", "1"]]}, {"uid": "86", "wbs": "1.4.4.3", "block": "B4", "name": "Deployment on Prod", "start": "2026-08-14", "finish": "2026-08-14", "work": 8.0, "res": ["Systems Engineer"], "preds": [["1.4.4.2", "1"]]}, {"uid": "89", "wbs": "1.5.1.1", "block": "B5", "name": "Adjusting logic and algorithms in the database", "start": "2026-08-06", "finish": "2026-08-07", "work": 16.0, "res": ["SQL Developer 2"], "preds": [["1.4.1.4", "1"]]}, {"uid": "90", "wbs": "1.5.1.2", "block": "B5", "name": "Testing and deployment on TEST Env. (DB)", "start": "2026-08-10", "finish": "2026-08-10", "work": 8.0, "res": ["SQL Developer 2"], "preds": [["1.5.1.1", "1"]]}, {"uid": "92", "wbs": "1.5.2.1", "block": "B5", "name": "Additional analysis on logic adjustment", "start": "2026-08-06", "finish": "2026-08-11", "work": 15.0, "res": ["Analyst 2"], "preds": [["1.5.1.1", "3"], ["1.4.3.1", "1"]]}, {"uid": "94", "wbs": "1.5.3.1", "block": "B5", "name": "Deployment on UAT", "start": "2026-08-17", "finish": "2026-08-17", "work": 8.0, "res": ["Systems Engineer"], "preds": [["1.5.1.2", "1"], ["1.5.2.1", "1"], ["1.4.4.3", "1"]]}, {"uid": "95", "wbs": "1.5.3.2", "block": "B5", "name": "UAT bug fixes", "start": "2026-08-18", "finish": "2026-08-24", "work": 40.0, "res": [null], "preds": [["1.5.3.1", "1"]]}, {"uid": "96", "wbs": "1.5.3.3", "block": "B5", "name": "Deployment on Prod", "start": "2026-08-25", "finish": "2026-08-25", "work": 8.0, "res": ["Systems Engineer"], "preds": [["1.5.3.2", "1"]]}], "people": {"SQL Developer 1": {"fio": "Анна Егорова", "role": "SQL-разработчик 1", "tasks": [{"uid": "4", "wbs": "1.1.1.1", "block": "B1", "name": "Modification of the curvature calculation algorithm", "start": "2026-07-07", "finish": "2026-07-10", "work": 20.0, "res": ["SQL Developer 1"], "preds": [], "ext": []}, {"uid": "5", "wbs": "1.1.1.2", "block": "B1", "name": "Modification of the LCC, DCC calculation algorithm", "start": "2026-07-10", "finish": "2026-07-20", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.1", "1"]], "ext": []}, {"uid": "6", "wbs": "1.1.1.3", "block": "B1", "name": "Modification of dependent calculations based on old and new parameters", "start": "2026-07-20", "finish": "2026-07-28", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.2", "1"]], "ext": []}, {"uid": "7", "wbs": "1.1.1.4", "block": "B1", "name": "Modifications to DB objects — adding new fields to all related tables", "start": "2026-07-28", "finish": "2026-08-05", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.3", "1"]], "ext": []}, {"uid": "8", "wbs": "1.1.1.5", "block": "B1", "name": "Creation and implementation of the displacement generation algorithm", "start": "2026-08-05", "finish": "2026-08-14", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.4", "1"]], "ext": []}, {"uid": "9", "wbs": "1.1.1.6", "block": "B1", "name": "Ensuring selection of Displacement Lateral type anomalies", "start": "2026-08-14", "finish": "2026-08-24", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.5", "1"]], "ext": []}, {"uid": "10", "wbs": "1.1.1.7", "block": "B1", "name": "Ensuring selection of Displacement Vertical type anomalies", "start": "2026-08-25", "finish": "2026-09-02", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.6", "1"]], "ext": []}, {"uid": "11", "wbs": "1.1.1.8", "block": "B1", "name": "Algorithm speed optimisation (max +30% processing time increase)", "start": "2026-09-03", "finish": "2026-09-14", "work": 50.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.7", "1"]], "ext": []}, {"uid": "12", "wbs": "1.1.1.9", "block": "B1", "name": "Adjustment of the Report scheme", "start": "2026-09-15", "finish": "2026-09-23", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.8", "1"]], "ext": []}, {"uid": "13", "wbs": "1.1.1.10", "block": "B1", "name": "Verification of new Report schema data output", "start": "2026-09-24", "finish": "2026-09-29", "work": 24.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.9", "1"]], "ext": []}, {"uid": "14", "wbs": "1.1.1.11", "block": "B1", "name": "Testing and deployment on TEST Env. (DB)", "start": "2026-09-30", "finish": "2026-10-08", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.10", "1"]], "ext": []}, {"uid": "54", "wbs": "1.3.1.1", "block": "B3", "name": "Making changes to the auto-matching algorithm", "start": "2026-10-09", "finish": "2026-10-20", "work": 45.0, "res": ["SQL Developer 1"], "preds": [["1.1.1.11", "1"]], "ext": []}, {"uid": "55", "wbs": "1.3.1.2", "block": "B3", "name": "Making changes to the inspection confirmation algorithm", "start": "2026-10-21", "finish": "2026-10-29", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.3.1.1", "1"]], "ext": []}, {"uid": "56", "wbs": "1.3.1.3", "block": "B3", "name": "Preparing views for displaying archived data for a specified kilometre range", "start": "2026-10-29", "finish": "2026-11-09", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.3.1.2", "1"]], "ext": []}, {"uid": "57", "wbs": "1.3.1.4", "block": "B3", "name": "Testing and deployment on TEST Env. (DB)", "start": "2026-11-10", "finish": "2026-11-18", "work": 40.0, "res": ["SQL Developer 1"], "preds": [["1.3.1.3", "1"]], "ext": []}], "blocks": ["B1", "B3"]}, "SQL Developer 2": {"fio": "Алексей Тимофеев", "role": "SQL-разработчик 2", "tasks": [{"uid": "71", "wbs": "1.4.1.1", "block": "B4", "name": "Creating database objects for logging and displaying execution status", "start": "2026-07-20", "finish": "2026-07-21", "work": 13.0, "res": ["SQL Developer 2"], "preds": [], "ext": []}, {"uid": "72", "wbs": "1.4.1.2", "block": "B4", "name": "Organising the logging process model", "start": "2026-07-22", "finish": "2026-07-28", "work": 40.0, "res": ["SQL Developer 2"], "preds": [["1.4.1.1", "1"]], "ext": []}, {"uid": "73", "wbs": "1.4.1.3", "block": "B4", "name": "Organisation of alerts in the absence of manual comparison", "start": "2026-07-29", "finish": "2026-07-30", "work": 16.0, "res": ["SQL Developer 2"], "preds": [["1.4.1.2", "1"]], "ext": []}, {"uid": "74", "wbs": "1.4.1.4", "block": "B4", "name": "Testing and deployment on TEST Env. (DB)", "start": "2026-07-31", "finish": "2026-08-05", "work": 32.0, "res": ["SQL Developer 2"], "preds": [["1.4.1.3", "1"]], "ext": []}, {"uid": "89", "wbs": "1.5.1.1", "block": "B5", "name": "Adjusting logic and algorithms in the database", "start": "2026-08-06", "finish": "2026-08-07", "work": 16.0, "res": ["SQL Developer 2"], "preds": [["1.4.1.4", "1"]], "ext": []}, {"uid": "90", "wbs": "1.5.1.2", "block": "B5", "name": "Testing and deployment on TEST Env. (DB)", "start": "2026-08-10", "finish": "2026-08-10", "work": 8.0, "res": ["SQL Developer 2"], "preds": [["1.5.1.1", "1"]], "ext": []}, {"uid": "30", "wbs": "1.2.1.1", "block": "B2", "name": "Database setup — design and preparation of dedicated schema", "start": "2026-08-11", "finish": "2026-08-17", "work": 40.0, "res": ["SQL Developer 2"], "preds": [["1.5.1.2", "1"]], "ext": []}, {"uid": "31", "wbs": "1.2.1.2", "block": "B2", "name": "Database setup — tables, views and logging structures", "start": "2026-08-18", "finish": "2026-08-26", "work": 50.0, "res": ["SQL Developer 2"], "preds": [["1.2.1.1", "1"]], "ext": []}], "blocks": ["B2", "B4", "B5"]}, "Backend Developer": {"fio": "Милица Егошина", "role": "Backend-разработчик", "tasks": [{"uid": "35", "wbs": "1.2.2.3", "block": "B2", "name": "Design of validation system report templates", "start": "2026-07-27", "finish": "2026-07-31", "work": 40.0, "res": ["Backend Developer"], "preds": [], "ext": []}, {"uid": "36", "wbs": "1.2.2.4", "block": "B2", "name": "Additional analysis of CSV files", "start": "2026-08-03", "finish": "2026-08-03", "work": 8.0, "res": ["Backend Developer"], "preds": [["1.2.2.3", "1"]], "ext": []}, {"uid": "37", "wbs": "1.2.2.5", "block": "B2", "name": "Design of CSV file validation module (5PT MODEL)", "start": "2026-08-04", "finish": "2026-08-06", "work": 24.0, "res": ["Backend Developer"], "preds": [["1.2.2.4", "1"]], "ext": []}, {"uid": "38", "wbs": "1.2.2.6", "block": "B2", "name": "Additional analysis of GDB files (PODS, SSDM, Engineering Features, Free Spans)", "start": "2026-08-07", "finish": "2026-08-14", "work": 48.0, "res": ["Backend Developer"], "preds": [["1.2.2.5", "1"]], "ext": []}, {"uid": "39", "wbs": "1.2.2.7", "block": "B2", "name": "Design of validation module for GDB file types", "start": "2026-08-17", "finish": "2026-08-28", "work": 80.0, "res": ["Backend Developer"], "preds": [["1.2.2.6", "1"]], "ext": []}, {"uid": "40", "wbs": "1.2.2.8", "block": "B2", "name": "Additional analysis of video files and accompanying data files", "start": "2026-08-31", "finish": "2026-09-04", "work": 40.0, "res": ["Backend Developer"], "preds": [["1.2.2.7", "1"]], "ext": []}, {"uid": "41", "wbs": "1.2.2.9", "block": "B2", "name": "Design of validation module for video files including S3 handling", "start": "2026-09-07", "finish": "2026-09-11", "work": 40.0, "res": ["Backend Developer"], "preds": [["1.2.2.8", "1"]], "ext": []}, {"uid": "42", "wbs": "1.2.2.10", "block": "B2", "name": "Additional analysis of the Digital Terrain Model", "start": "2026-09-14", "finish": "2026-09-16", "work": 24.0, "res": ["Backend Developer"], "preds": [["1.2.2.9", "1"]], "ext": []}, {"uid": "43", "wbs": "1.2.2.11", "block": "B2", "name": "Design of Digital Terrain Model file validation module", "start": "2026-09-17", "finish": "2026-09-23", "work": 40.0, "res": ["Backend Developer"], "preds": [["1.2.2.10", "1"]], "ext": []}, {"uid": "44", "wbs": "1.2.2.12", "block": "B2", "name": "Testing and deployment on TEST Env. (Backend + Frontend)", "start": "2026-09-24", "finish": "2026-10-05", "work": 64.0, "res": ["Backend Developer"], "preds": [["1.2.2.11", "1"]], "ext": []}, {"uid": "63", "wbs": "1.3.3.2", "block": "B3", "name": "Refining backend methods", "start": "2026-10-06", "finish": "2026-10-07", "work": 10.0, "res": ["Backend Developer"], "preds": [["1.3.3.1", "1"], ["1.2.2.12", "1"]], "ext": [{"wbs": "1.3.3.1", "who": "Александр Сим"}]}, {"uid": "64", "wbs": "1.3.3.3", "block": "B3", "name": "Testing and deployment on TEST Env. (Backend + Frontend)", "start": "2026-10-08", "finish": "2026-10-08", "work": 8.0, "res": ["Backend Developer"], "preds": [["1.3.3.2", "1"]], "ext": []}], "blocks": ["B2", "B3"]}, "Frontend Developer": {"fio": "Александр Сим", "role": "Frontend-разработчик", "tasks": [{"uid": "76", "wbs": "1.4.2.1", "block": "B4", "name": "Adding an API to obtain the status of the data confirmation procedure", "start": "2026-07-22", "finish": "2026-07-22", "work": 8.0, "res": ["Frontend Developer"], "preds": [["1.4.1.1", "1"]], "ext": [{"wbs": "1.4.1.1", "who": "Алексей Тимофеев"}]}, {"uid": "77", "wbs": "1.4.2.2", "block": "B4", "name": "Adding display of procedure status on the page", "start": "2026-07-23", "finish": "2026-07-24", "work": 12.0, "res": ["Frontend Developer"], "preds": [["1.4.2.1", "1"]], "ext": []}, {"uid": "78", "wbs": "1.4.2.3", "block": "B4", "name": "Adding mechanism to block Confirm and Confirm Inspection Block buttons", "start": "2026-07-27", "finish": "2026-07-27", "work": 4.0, "res": ["Frontend Developer"], "preds": [["1.4.2.2", "1"]], "ext": []}, {"uid": "79", "wbs": "1.4.2.4", "block": "B4", "name": "Implementing warning logic — pop-up in absence of manual matching", "start": "2026-07-28", "finish": "2026-07-29", "work": 16.0, "res": ["Frontend Developer"], "preds": [["1.4.2.3", "1"]], "ext": []}, {"uid": "80", "wbs": "1.4.2.5", "block": "B4", "name": "Testing and deployment on TEST Env. (Backend + Frontend)", "start": "2026-07-30", "finish": "2026-07-31", "work": 10.0, "res": ["Frontend Developer"], "preds": [["1.4.2.4", "1"]], "ext": []}, {"uid": "20", "wbs": "1.1.3.1", "block": "B1", "name": "Display fields by type of Displacements (Data Matching tab)", "start": "2026-08-03", "finish": "2026-08-07", "work": 40.0, "res": ["Frontend Developer"], "preds": [["1.4.2.5", "1"]], "ext": []}, {"uid": "21", "wbs": "1.1.3.2", "block": "B1", "name": "Adjusting dependencies and displaying fields by Displacement type", "start": "2026-08-10", "finish": "2026-08-13", "work": 30.0, "res": ["Frontend Developer"], "preds": [["1.1.3.1", "1"]], "ext": []}, {"uid": "22", "wbs": "1.1.3.3", "block": "B1", "name": "Displaying fields with additional information (updated LCC/DCC)", "start": "2026-08-14", "finish": "2026-08-20", "work": 40.0, "res": ["Frontend Developer"], "preds": [["1.1.3.2", "1"]], "ext": []}, {"uid": "23", "wbs": "1.1.3.4", "block": "B1", "name": "Testing and deployment on TEST Env. (Frontend)", "start": "2026-08-21", "finish": "2026-08-27", "work": 40.0, "res": ["Frontend Developer"], "preds": [["1.1.3.3", "1"]], "ext": []}, {"uid": "33", "wbs": "1.2.2.1", "block": "B2", "name": "UI design", "start": "2026-08-28", "finish": "2026-09-03", "work": 40.0, "res": ["Frontend Developer"], "preds": [["1.1.3.4", "1"]], "ext": []}, {"uid": "34", "wbs": "1.2.2.2", "block": "B2", "name": "UI implementation for validation system and archive page", "start": "2026-09-04", "finish": "2026-09-04", "work": 6.0, "res": ["Frontend Developer"], "preds": [["1.2.2.1", "1"]], "ext": []}, {"uid": "62", "wbs": "1.3.3.1", "block": "B3", "name": "Displaying the new archive page, configuring filters", "start": "2026-09-07", "finish": "2026-09-10", "work": 30.0, "res": ["Frontend Developer"], "preds": [["1.2.2.2", "1"]], "ext": []}], "blocks": ["B1", "B2", "B3", "B4"]}, "Systems Engineer": {"fio": "Иван Копылов", "role": "Системный инженер", "tasks": [{"uid": "84", "wbs": "1.4.4.1", "block": "B4", "name": "Deployment on UAT", "start": "2026-08-06", "finish": "2026-08-06", "work": 8.0, "res": ["Systems Engineer"], "preds": [["1.4.1.4", "1"], ["1.4.3.1", "1"], ["1.4.2.5", "1"]], "ext": [{"wbs": "1.4.1.4", "who": "Алексей Тимофеев"}, {"wbs": "1.4.3.1", "who": "Михаил Юферев"}, {"wbs": "1.4.2.5", "who": "Александр Сим"}]}, {"uid": "86", "wbs": "1.4.4.3", "block": "B4", "name": "Deployment on Prod", "start": "2026-08-14", "finish": "2026-08-14", "work": 8.0, "res": ["Systems Engineer"], "preds": [["1.4.4.2", "1"]], "ext": []}, {"uid": "94", "wbs": "1.5.3.1", "block": "B5", "name": "Deployment on UAT", "start": "2026-08-17", "finish": "2026-08-17", "work": 8.0, "res": ["Systems Engineer"], "preds": [["1.5.1.2", "1"], ["1.5.2.1", "1"], ["1.4.4.3", "1"]], "ext": [{"wbs": "1.5.1.2", "who": "Алексей Тимофеев"}, {"wbs": "1.5.2.1", "who": "Михаил Юферев"}]}, {"uid": "96", "wbs": "1.5.3.3", "block": "B5", "name": "Deployment on Prod", "start": "2026-08-25", "finish": "2026-08-25", "work": 8.0, "res": ["Systems Engineer"], "preds": [["1.5.3.2", "1"]], "ext": []}, {"uid": "49", "wbs": "1.2.4.1", "block": "B2", "name": "Deployment on UAT", "start": "2026-10-06", "finish": "2026-10-07", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.2.2.12", "1"], ["1.2.3.2", "1"]], "ext": [{"wbs": "1.2.2.12", "who": "Милица Егошина"}, {"wbs": "1.2.3.2", "who": "Михаил Юферев"}]}, {"uid": "25", "wbs": "1.1.4.1", "block": "B1", "name": "Deployment on UAT", "start": "2026-10-09", "finish": "2026-10-12", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.1.1.11", "1"], ["1.1.2.3", "1"], ["1.1.3.4", "1"]], "ext": [{"wbs": "1.1.1.11", "who": "Анна Егорова"}, {"wbs": "1.1.2.3", "who": "Роман Назаров"}, {"wbs": "1.1.3.4", "who": "Александр Сим"}]}, {"uid": "51", "wbs": "1.2.4.3", "block": "B2", "name": "Deployment on Prod", "start": "2026-10-15", "finish": "2026-10-16", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.2.4.2", "1"]], "ext": []}, {"uid": "27", "wbs": "1.1.4.3", "block": "B1", "name": "Deployment on Prod", "start": "2026-10-20", "finish": "2026-10-21", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.1.4.2", "1"]], "ext": []}, {"uid": "66", "wbs": "1.3.4.1", "block": "B3", "name": "Deployment on UAT", "start": "2026-11-19", "finish": "2026-11-20", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.3.1.4", "1"], ["1.3.2.2", "1"], ["1.3.3.3", "1"]], "ext": [{"wbs": "1.3.1.4", "who": "Анна Егорова"}, {"wbs": "1.3.2.2", "who": "Михаил Юферев"}, {"wbs": "1.3.3.3", "who": "Милица Егошина"}]}, {"uid": "68", "wbs": "1.3.4.3", "block": "B3", "name": "Deployment on Prod", "start": "2026-11-30", "finish": "2026-12-01", "work": 16.0, "res": ["Systems Engineer"], "preds": [["1.3.4.2", "1"]], "ext": []}], "blocks": ["B1", "B2", "B3", "B4", "B5"]}, "Analyst 1": {"fio": "Роман Назаров", "role": "Аналитик 1", "tasks": [{"uid": "16", "wbs": "1.1.2.1", "block": "B1", "name": "Analysis of algorithm speed optimisation", "start": "2026-07-01", "finish": "2026-07-03", "work": 24.0, "res": ["Analyst 1"], "preds": [], "ext": []}, {"uid": "17", "wbs": "1.1.2.2", "block": "B1", "name": "Analysis of UI modifications and adjustments", "start": "2026-07-06", "finish": "2026-07-09", "work": 31.0, "res": ["Analyst 1"], "preds": [["1.1.2.1", "1"]], "ext": []}, {"uid": "18", "wbs": "1.1.2.3", "block": "B1", "name": "Testing and analysis of algorithm adjustments", "start": "2026-07-10", "finish": "2026-07-17", "work": 47.0, "res": ["Analyst 1"], "preds": [["1.1.2.2", "1"]], "ext": []}, {"uid": "46", "wbs": "1.2.3.1", "block": "B2", "name": "Additional analysis for logic correction", "start": "2026-07-27", "finish": "2026-08-07", "work": 80.0, "res": ["Analyst 1"], "preds": [["1.2.2.3", "3"], ["1.1.2.3", "1"]], "ext": [{"wbs": "1.2.2.3", "who": "Милица Егошина"}]}, {"uid": "59", "wbs": "1.3.2.1", "block": "B3", "name": "Additional analysis on logic adjustment", "start": "2026-10-09", "finish": "2026-11-05", "work": 150.0, "res": ["Analyst 1"], "preds": [["1.3.1.1", "3"], ["1.2.3.2", "1"]], "ext": [{"wbs": "1.3.1.1", "who": "Анна Егорова"}, {"wbs": "1.2.3.2", "who": "Михаил Юферев"}]}], "blocks": ["B1", "B2", "B3"]}, "Analyst 2": {"fio": "Михаил Юферев", "role": "Аналитик 2", "tasks": [{"uid": "82", "wbs": "1.4.3.1", "block": "B4", "name": "Additional analysis on logic adjustment", "start": "2026-07-20", "finish": "2026-08-05", "work": 50.0, "res": ["Analyst 2"], "preds": [["1.4.1.1", "3"]], "ext": [{"wbs": "1.4.1.1", "who": "Алексей Тимофеев"}]}, {"uid": "92", "wbs": "1.5.2.1", "block": "B5", "name": "Additional analysis on logic adjustment", "start": "2026-08-06", "finish": "2026-08-11", "work": 15.0, "res": ["Analyst 2"], "preds": [["1.5.1.1", "3"], ["1.4.3.1", "1"]], "ext": [{"wbs": "1.5.1.1", "who": "Алексей Тимофеев"}]}, {"uid": "47", "wbs": "1.2.3.2", "block": "B2", "name": "Testing and analysis of algorithm adjustments", "start": "2026-08-10", "finish": "2026-09-01", "work": 67.0, "res": ["Analyst 2"], "preds": [["1.2.3.1", "1"]], "ext": [{"wbs": "1.2.3.1", "who": "Роман Назаров"}]}, {"uid": "60", "wbs": "1.3.2.2", "block": "B3", "name": "Testing", "start": "2026-11-05", "finish": "2026-11-18", "work": 35.0, "res": ["Analyst 2"], "preds": [["1.3.2.1", "1"]], "ext": [{"wbs": "1.3.2.1", "who": "Роман Назаров"}]}], "blocks": ["B2", "B3", "B4", "B5"]}}, "block_name": {"B1": "Доработка 1 — Update Displacement Generation Logic", "B2": "Доработка 2 — External Inspection Data Integrity Check", "B3": "Доработка 3 — Anomaly Archiving Mechanism", "B4": "Доработка 4 — Procedure Execution Status (Confirm Inspection Block)", "B5": "Доработка 5 — Freespan Length Calculation"}, "deadlines": {"B1": "2026-10-31", "B2": "2027-02-28", "B3": "2027-03-31", "B4": "2026-09-30", "B5": "2026-09-30"}};
 
-const BC={'B1':'var(--b1)','B2':'var(--b2)','B3':'var(--b3)','B4':'var(--b4)','B5':'var(--b5)'};
-const BSHORT={'B1':'Доработка 1','B2':'Доработка 2','B3':'Доработка 3','B4':'Доработка 4','B5':'Доработка 5'};
-const PEOPLE_ORDER=['SQL Developer 1','SQL Developer 2','Backend Developer','Frontend Developer','Systems Engineer','Analyst 1','Analyst 2'];
-const D0=new Date('2026-07-01'), D1=new Date('2026-12-15');
-const SPAN=D1-D0;
-function pct(d){return Math.max(0,Math.min(100,((new Date(d)-D0)/SPAN)*100));}
-function fmt(d){const x=new Date(d);return String(x.getDate()).padStart(2,'0')+'.'+String(x.getMonth()+1).padStart(2,'0');}
-function fmtY(d){const x=new Date(d);return fmt(d)+'.'+x.getFullYear();}
+const BC = {B1:'var(--b1)',B2:'var(--b2)',B3:'var(--b3)',B4:'var(--b4)',B5:'var(--b5)'};
+const BHEX = {B1:'#4472C4',B2:'#548235',B3:'#BF8F00',B4:'#C55A11',B5:'#7F7F7F'};
+const BSHORT = {B1:'Доработка 1',B2:'Доработка 2',B3:'Доработка 3',B4:'Доработка 4',B5:'Доработка 5'};
+const PEOPLE_ORDER = ['SQL Developer 1','SQL Developer 2','Backend Developer','Frontend Developer','Systems Engineer','Analyst 1','Analyst 2'];
+const BLOCKS = ['B1','B2','B3','B4','B5'];
+const D0 = new Date(2026,6,1);   // local Jul 1 2026
+const D1 = new Date(2026,11,15); // local Dec 15 2026
+const SPAN = D1 - D0;
+const DAY = 86400000;
 
-const tabs=document.getElementById('tabs'), panels=document.getElementById('panels');
-function addTab(id,label){
-  const t=document.createElement('div');t.className='tab';t.textContent=label;t.dataset.id=id;
-  t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');document.getElementById(id).classList.add('active');};
-  tabs.appendChild(t);return t;
+function parseD(s){
+  if (s instanceof Date) return s;
+  const p = String(s).slice(0,10).split('-').map(Number);
+  return new Date(p[0], p[1]-1, p[2]);
 }
-function addPanel(id){const p=document.createElement('div');p.className='panel';p.id=id;panels.appendChild(p);return p;}
-
-// ============ TAB 1: OVERVIEW ============
-addTab('ov','Общая картина').classList.add('active');
-const ov=addPanel('ov');ov.classList.add('active');
-
-// legend + who-works-on-what table
-let lg='<div class="card"><b style="font-size:14px">Кто на каких доработках задействован</b>'+
-  '<div class="legend">';
-for(const b of ['B1','B2','B3','B4','B5'])
-  lg+='<span class="legchip"><span class="sw" style="background:'+BC[b]+'"></span>'+DATA.block_name[b]+'</span>';
-lg+='</div><table class="who"><tr><th style="width:260px">Сотрудник</th><th>Доработки</th><th style="width:110px">Задач</th></tr>';
-for(const k of PEOPLE_ORDER){
-  const p=DATA.people[k];
-  let chips='';
-  for(const b of p.blocks) chips+='<span class="chip" style="background:'+BC[b]+'">'+BSHORT[b]+'</span>';
-  lg+='<tr><td><b>'+p.fio+'</b><br><span style="color:#666;font-size:12px">'+p.role+'</span></td><td>'+chips+'</td><td>'+p.tasks.length+'</td></tr>';
+function pct(d){
+  return Math.max(0, Math.min(100, ((parseD(d)-D0)/SPAN)*100));
 }
-lg+='</table></div>';
-ov.innerHTML=lg;
-
-// gantt swimlanes
-let g='<div class="card"><b style="font-size:14px">Календарная карта: июль — декабрь 2026</b><div class="gantt"><div class="gwrap">';
-g+='<div class="months">';
-const months=[['2026-07-01','Июль'],['2026-08-01','Август'],['2026-09-01','Сентябрь'],['2026-10-01','Октябрь'],['2026-11-01','Ноябрь'],['2026-12-01','Декабрь']];
-for(let i=0;i<months.length;i++){
-  const st=pct(months[i][0]); const en=i+1<months.length?pct(months[i+1][0]):100;
-  g+='<div class="mcell" style="width:'+(en-st)+'%">'+months[i][1]+'</div>';
+function fmt(d){
+  const x = parseD(d);
+  return String(x.getDate()).padStart(2,'0')+'.'+String(x.getMonth()+1).padStart(2,'0');
 }
-g+='</div>';
-for(const k of PEOPLE_ORDER){
-  const p=DATA.people[k];
-  g+='<div class="grow"><div class="gname">'+p.fio+'</div><div class="gtrack">';
-  for(const t of p.tasks){
-    const l=pct(t.start), r=pct(t.finish)+ (100/168); // ~ +1 день ширины
-    g+='<div class="gbar" style="left:'+l+'%;width:'+Math.max(0.7,r-l)+'%;background:'+BC[t.block]+'" '+
-       'data-tip="<b>'+t.block+' · '+t.name.replace(/"/g,'&quot;')+'</b><br>'+fmtY(t.start)+' — '+fmtY(t.finish)+' · '+t.work+' ч">'+t.block+'</div>';
+function fmtY(d){
+  const x = parseD(d);
+  return fmt(d)+'.'+x.getFullYear();
+}
+function todayLocal(){
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+function isoLocal(d){
+  const x = parseD(d);
+  return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+}
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+}
+
+// ---- indexes ----
+const byWbs = {};
+const roleFio = {};
+const fioRole = {};
+for (const k of PEOPLE_ORDER){
+  roleFio[k] = DATA.people[k].fio;
+  fioRole[DATA.people[k].fio] = k;
+}
+for (const t of DATA.tasks){
+  byWbs[t.wbs] = t;
+  const r = t.res && t.res[0];
+  t._role = r || null;
+  t._fio = r ? (roleFio[r] || '—') : 'не назначен';
+}
+
+function taskTip(t){
+  let dep = '';
+  if (t.preds && t.preds.length){
+    dep = '<br>⬅ ждёт: '+t.preds.map(p=>{
+      const pred = byWbs[p[0]];
+      const who = pred ? pred._fio : '?';
+      return p[0]+' ('+who+')';
+    }).join(', ');
   }
-  g+='</div></div>';
+  return '<b>'+esc(t.block)+' · '+esc(t.name)+'</b><br>'+
+    fmtY(t.start)+' — '+fmtY(t.finish)+' · '+t.work+' ч · WBS '+t.wbs+'<br>'+
+    'Исполнитель: '+esc(t._fio)+dep;
 }
-// линия текущей даты (сегодня)
-const _now=new Date();
-const todayStr=_now.getFullYear()+'-'+String(_now.getMonth()+1).padStart(2,'0')+'-'+String(_now.getDate()).padStart(2,'0');
-const todayP=pct(todayStr);
-if(todayP>0&&todayP<100){
-  const left='calc(180px + (100% - 180px) * '+todayP+'/100)';
-  g+='<div class="today-line" style="left:'+left+'" title="Сегодня"><span>Сегодня '+fmt(todayStr)+'</span></div>';
-}
-g+='</div></div>';
-g+='<div style="font-size:11.5px;color:var(--muted);margin-top:6px">Красная вертикальная линия = сегодня. Цвет плитки = доработка. Наведи курсор — детали задачи. Дедлайны: Д4/Д5 — 30.09, Д1 — 31.10, Д2 — 28.02.27, Д3 — 31.03.27 (часть за пределами карты, план завершается раньше).</div></div>';
-ov.innerHTML+=g;
 
-// ============ PERSON TABS ============
-for(const k of PEOPLE_ORDER){
-  const p=DATA.people[k];
-  const id='p_'+k.replace(/\s/g,'_');
-  addTab(id,p.fio.split(' ')[0]+(p.fio.split(' ')[1]?' '+p.fio.split(' ')[1][0]+'.':''));
-  const pan=addPanel(id);
-  let h='<div class="card"><b style="font-size:16px">'+p.fio+'</b> · <span style="color:#666">'+p.role+'</span>';
-  h+='<div class="pinfo" style="margin-top:6px">Доработки: ';
-  for(const b of p.blocks) h+='<span class="chip" style="background:'+BC[b]+'">'+BSHORT[b]+'</span>';
-  h+=' · всего задач: '+p.tasks.length+'</div>';
-  // route grouped by block in execution order
+// who is blocked by task t (successors)
+function successors(wbs){
+  return DATA.tasks.filter(t => (t.preds||[]).some(p => p[0]===wbs));
+}
+function isCrossPerson(a, b){
+  return a && b && a._fio !== b._fio;
+}
+
+// ---- tabs ----
+const tabs = document.getElementById('tabs');
+const panels = document.getElementById('panels');
+function addTab(id, label, opts={}){
+  const t = document.createElement('div');
+  t.className = 'tab'+(opts.block?' btab':'');
+  t.textContent = label;
+  t.dataset.id = id;
+  if (opts.color) t.style.borderLeftColor = opts.color;
+  t.onclick = () => activateTab(id);
+  tabs.appendChild(t);
+  return t;
+}
+function addPanel(id){
+  const p = document.createElement('div');
+  p.className = 'panel';
+  p.id = id;
+  panels.appendChild(p);
+  return p;
+}
+function activateTab(id){
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.id===id));
+  document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id===id));
+  // redraw arrows for visible gantts (layout ready)
+  requestAnimationFrame(() => {
+    document.querySelectorAll('#'+CSS.escape(id)+' .gwrap[data-arrows]').forEach(drawArrowsForWrap);
+  });
+}
+
+// ---- gantt builder ----
+const MONTHS = [
+  ['2026-07-01','Июль'],['2026-08-01','Август'],['2026-09-01','Сентябрь'],
+  ['2026-10-01','Октябрь'],['2026-11-01','Ноябрь'],['2026-12-01','Декабрь']
+];
+
+function monthsHeaderHtml(){
+  let h = '<div class="months">';
+  for (let i=0;i<MONTHS.length;i++){
+    const st = pct(MONTHS[i][0]);
+    const en = i+1<MONTHS.length ? pct(MONTHS[i+1][0]) : 100;
+    h += '<div class="mcell" style="width:'+(en-st)+'%">'+MONTHS[i][1]+'</div>';
+  }
+  return h+'</div>';
+}
+
+function vlineHtml(kind, dateStr, label, color){
+  const p = pct(dateStr);
+  if (p<=0 || p>=100) return '';
+  const left = 'calc(180px + (100% - 180px) * '+p+'/100)';
+  const col = color || (kind==='today' ? '#E53935' : '#C00');
+  const cls = kind==='today' ? 'vline today' : 'vline dl';
+  return '<div class="'+cls+'" style="left:'+left+';'+(kind==='today'?'':';border-left-color:'+col)+
+    '" title="'+esc(label)+'"><span style="color:'+col+'">'+esc(label)+'</span></div>';
+}
+
+function deadlinesInRangeHtml(blocksFilter){
+  let h = '';
+  const list = blocksFilter || BLOCKS;
+  for (const b of list){
+    const d = DATA.deadlines[b];
+    if (!d) continue;
+    const p = pct(d);
+    if (p<=0 || p>=100) continue; // outside chart
+    h += vlineHtml('dl', d, BSHORT[b]+' · '+fmt(d), BHEX[b]);
+  }
+  // note: out-of-range deadlines listed separately by caller
+  return h;
+}
+
+function todayLineHtml(){
+  const t = todayLocal();
+  if (t < D0 || t > D1) return '';
+  return vlineHtml('today', isoLocal(t), 'Сегодня '+fmt(t));
+}
+
+/**
+ * rows: [{key, label, sub, tasks:[]}]
+ * opts: {arrows:'cross'|'all'|'none', deadlines:bool|array of blocks, id}
+ */
+function buildGantt(rows, opts={}){
+  const mode = opts.arrows || 'none';
+  const wrapId = opts.id || ('g'+Math.random().toString(36).slice(2,8));
+  let html = '<div class="gantt"><div class="gwrap" id="'+wrapId+'" data-arrows="'+mode+'">';
+  html += monthsHeaderHtml();
+
+  // collect edges for later
+  const edgePairs = [];
+  const barMeta = {}; // wbs -> {row, startPct, endPct}
+
+  rows.forEach((row, ri) => {
+    html += '<div class="grow" data-row="'+ri+'"><div class="gname">'+row.label+
+      (row.sub ? '<small>'+esc(row.sub)+'</small>' : '')+'</div><div class="gtrack">';
+    for (const t of row.tasks){
+      const l = pct(t.start);
+      const r = pct(t.finish) + (100/168);
+      const w = Math.max(0.7, r-l);
+      barMeta[t.wbs] = {row:ri, left:l, right:l+w, block:t.block};
+      html += '<div class="gbar" data-wbs="'+esc(t.wbs)+'" style="left:'+l+'%;width:'+w+'%;background:'+BC[t.block]+'" data-tip="'+taskTip(t).replace(/"/g,'&quot;')+'">'+
+        (opts.barLabel==='wbs' ? t.wbs : t.block)+'</div>';
+    }
+    html += '</div></div>';
+  });
+
+  // edges
+  if (mode !== 'none'){
+    for (const t of DATA.tasks){
+      for (const pred of (t.preds||[])){
+        const from = byWbs[pred[0]];
+        if (!from) continue;
+        if (!barMeta[from.wbs] || !barMeta[t.wbs]) continue; // both must be on chart
+        if (mode === 'cross' && !isCrossPerson(from, t)) continue;
+        edgePairs.push([from.wbs, t.wbs]);
+      }
+    }
+  }
+
+  html += todayLineHtml();
+  if (opts.deadlines){
+    const bl = opts.deadlines === true ? BLOCKS : opts.deadlines;
+    html += deadlinesInRangeHtml(bl);
+  }
+
+  html += '<svg class="g-arrows" data-edges=\''+JSON.stringify(edgePairs)+'\'></svg>';
+  html += '</div></div>';
+  return html;
+}
+
+function drawArrowsForWrap(wrap){
+  const svg = wrap.querySelector('.g-arrows');
+  if (!svg) return;
+  let edges = [];
+  try { edges = JSON.parse(svg.getAttribute('data-edges')||'[]'); } catch(e){}
+  const rect = wrap.getBoundingClientRect();
+  const W = wrap.scrollWidth || rect.width;
+  const H = wrap.offsetHeight;
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.style.width = W+'px';
+  svg.style.height = H+'px';
+
+  // map wbs -> bar center-right / center-left in wrap coords
+  const pos = {};
+  wrap.querySelectorAll('.gbar[data-wbs]').forEach(bar => {
+    const br = bar.getBoundingClientRect();
+    const wr = wrap.getBoundingClientRect();
+    const wbs = bar.getAttribute('data-wbs');
+    pos[wbs] = {
+      x1: br.right - wr.left + wrap.scrollLeft,
+      x0: br.left - wr.left + wrap.scrollLeft,
+      y: br.top + br.height/2 - wr.top + wrap.scrollTop
+    };
+  });
+
+  let paths = '<defs><marker id="arrHead" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><polygon points="0 0, 7 3.5, 0 7" fill="var(--arrow)"/></marker></defs>';
+  for (const [a,b] of edges){
+    const A = pos[a], B = pos[b];
+    if (!A || !B) continue;
+    const x1 = A.x1, y1 = A.y, x2 = B.x0, y2 = B.y;
+    const dx = Math.max(18, Math.abs(x2-x1)*0.35);
+    const d = 'M '+x1+' '+y1+' C '+(x1+dx)+' '+y1+', '+(x2-dx)+' '+y2+', '+x2+' '+y2;
+    paths += '<path d="'+d+'" fill="none" stroke="var(--arrow)" stroke-width="1.4" opacity="0.65" marker-end="url(#arrHead)"/>';
+  }
+  svg.innerHTML = paths;
+}
+
+function scheduleArrowDraw(){
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.panel.active .gwrap[data-arrows]').forEach(drawArrowsForWrap);
+  });
+}
+
+// ---- overview ----
+addTab('ov','Общая картина').classList.add('active');
+const ov = addPanel('ov'); ov.classList.add('active');
+
+(function buildOverview(){
+  let lg = '<div class="card"><h2>Кто на каких доработках задействован</h2><div class="legend">';
+  for (const b of BLOCKS)
+    lg += '<span class="legchip"><span class="sw" style="background:'+BC[b]+'"></span>'+esc(DATA.block_name[b])+'</span>';
+  lg += '</div><table class="who"><tr><th style="width:260px">Сотрудник</th><th>Доработки</th><th style="width:90px">Задач</th><th style="width:90px">Часы</th></tr>';
+  for (const k of PEOPLE_ORDER){
+    const p = DATA.people[k];
+    let chips = '';
+    for (const b of p.blocks) chips += '<span class="chip" style="background:'+BC[b]+'">'+BSHORT[b]+'</span>';
+    const hours = p.tasks.reduce((s,t)=>s+t.work,0);
+    lg += '<tr><td><b>'+esc(p.fio)+'</b><br><span style="color:var(--muted);font-size:12px">'+esc(p.role)+'</span></td><td>'+chips+'</td><td>'+p.tasks.length+'</td><td>'+hours+'</td></tr>';
+  }
+  lg += '</table></div>';
+
+  const rows = PEOPLE_ORDER.map(k => {
+    const p = DATA.people[k];
+    return {key:k, label:esc(p.fio), sub:p.role, tasks:p.tasks};
+  });
+
+  let g = '<div class="card"><h2>Календарная карта: июль — декабрь 2026</h2>';
+  g += '<div class="toggle-row">';
+  g += '<label><input type="radio" name="ovArr" value="cross" checked> Стрелки: только между людьми</label>';
+  g += '<label><input type="radio" name="ovArr" value="all"> Все зависимости</label>';
+  g += '<label><input type="radio" name="ovArr" value="none"> Без стрелок</label>';
+  g += '</div>';
+  g += '<div id="ovGantt">'+buildGantt(rows,{arrows:'cross', deadlines:true, id:'ovGwrap', barLabel:'block'})+'</div>';
+  g += '<div class="note">Красная сплошная — сегодня. Цветные пунктиры — дедлайны доработок (в пределах карты: Д4/Д5 30.09, Д1 31.10). Д2 28.02.27 и Д3 31.03.27 за пределами горизонта. Стрелка: предшественник → блокируемая задача.</div></div>';
+  ov.innerHTML = lg + g;
+
+  ov.querySelectorAll('input[name="ovArr"]').forEach(inp => {
+    inp.onchange = () => {
+      const mode = ov.querySelector('input[name="ovArr"]:checked').value;
+      document.getElementById('ovGantt').innerHTML = buildGantt(rows,{arrows:mode, deadlines:true, id:'ovGwrap', barLabel:'block'});
+      scheduleArrowDraw();
+    };
+  });
+})();
+
+// ---- NOW / THIS WEEK ----
+addTab('now','Сейчас / эта неделя');
+const nowPan = addPanel('now');
+
+(function buildNow(){
+  const today = todayLocal();
+  const weekEnd = new Date(today.getTime() + 7*DAY);
+  const weekStart = today;
+
+  function overlapsWeek(t){
+    const s = parseD(t.start), f = parseD(t.finish);
+    return s <= weekEnd && f >= weekStart;
+  }
+  function activeToday(t){
+    const s = parseD(t.start), f = parseD(t.finish);
+    return s <= today && f >= today;
+  }
+  function startsThisWeek(t){
+    const s = parseD(t.start);
+    return s >= weekStart && s <= weekEnd;
+  }
+  function latePlan(t){
+    return parseD(t.finish) < today;
+  }
+  function startsSoon(t){
+    const s = parseD(t.start);
+    return s > today && s <= weekEnd;
+  }
+
+  const active = DATA.tasks.filter(activeToday).sort((a,b)=>parseD(a.start)-parseD(b.start));
+  const starting = DATA.tasks.filter(t => startsThisWeek(t) && !activeToday(t)).sort((a,b)=>parseD(a.start)-parseD(b.start));
+  const late = DATA.tasks.filter(latePlan).sort((a,b)=>parseD(b.finish)-parseD(a.finish));
+  // unblocked soon: preds finish before/at today and task starts this week or active
+  const handoffs = [];
+  for (const t of DATA.tasks){
+    for (const pred of (t.preds||[])){
+      const from = byWbs[pred[0]];
+      if (!from) continue;
+      if (!isCrossPerson(from, t)) continue;
+      // handoff near window: pred finishes within ±14d of today or task starts this week
+      const pf = parseD(from.finish);
+      const ts = parseD(t.start);
+      const near = Math.abs(pf - today) <= 14*DAY || (ts >= weekStart && ts <= weekEnd) || overlapsWeek(t) || overlapsWeek(from);
+      if (near) handoffs.push({from, to:t});
+    }
+  }
+  // unique by wbs pair
+  const seen = new Set();
+  const handoffsU = handoffs.filter(h => {
+    const k = h.from.wbs+'>'+h.to.wbs;
+    if (seen.has(k)) return false;
+    seen.add(k); return true;
+  }).sort((a,b)=>parseD(a.from.finish)-parseD(b.from.finish));
+
+  function taskCard(t, cls){
+    let dep = '';
+    if (t.preds && t.preds.length){
+      dep = '<div class="rdep">⬅ блокируют: '+t.preds.map(p=>{
+        const pr = byWbs[p[0]];
+        return (pr?pr.wbs:'?')+' · '+(pr?pr._fio:'?');
+      }).join('; ')+'</div>';
+    }
+    const suc = successors(t.wbs).filter(s => isCrossPerson(t,s));
+    let blocks = '';
+    if (suc.length){
+      blocks = '<div class="rdep">➡ блокирует: '+suc.map(s=>s.wbs+' · '+s._fio).join('; ')+'</div>';
+    }
+    return '<div class="taskrow '+cls+'" style="border-left-color:'+(cls==='late'?'var(--late)':cls==='active'?'var(--ok)':BHEX[t.block])+
+      '"><div class="t"><span class="chip" style="background:'+BC[t.block]+'">'+t.block+'</span> '+esc(t.name)+
+      '</div><div class="m">'+esc(t._fio)+' · '+fmtY(t.start)+' — '+fmtY(t.finish)+' · '+t.work+' ч · WBS '+t.wbs+'</div>'+dep+blocks+'</div>';
+  }
+
+  let h = '<div class="card"><h2>Сейчас / эта неделя · '+fmtY(today)+'</h2>';
+  h += '<div class="kpi">';
+  h += '<div class="box"><div class="n">'+active.length+'</div><div class="l">В плане на сегодня</div></div>';
+  h += '<div class="box"><div class="n">'+starting.length+'</div><div class="l">Стартуют на неделе</div></div>';
+  h += '<div class="box"><div class="n">'+late.length+'</div><div class="l">План finish &lt; сегодня</div></div>';
+  h += '<div class="box"><div class="n">'+handoffsU.length+'</div><div class="l">Handoff между людьми (±2 нед.)</div></div>';
+  h += '</div>';
+  h += '<div class="note">Статусы «готово/в работе» пока не ведутся — блоки по датам плана. «Просрочено» = плановый finish уже прошёл.</div></div>';
+
+  h += '<div class="cols">';
+  h += '<div class="card"><div class="section-title" style="color:var(--ok)">▶ В работе (по плану сегодня)</div>';
+  h += active.length ? active.map(t=>taskCard(t,'active')).join('') : '<div class="muted">Нет задач с датами, покрывающими сегодня.</div>';
+  h += '</div>';
+
+  h += '<div class="card"><div class="section-title" style="color:var(--warn)">⏭ Стартуют на этой неделе</div>';
+  h += starting.length ? starting.map(t=>taskCard(t,'soon')).join('') : '<div class="muted">Нет новых стартов на 7 дней.</div>';
+  h += '</div>';
+
+  h += '<div class="card"><div class="section-title" style="color:var(--late)">⏰ План finish уже прошёл</div>';
+  h += late.length ? late.map(t=>taskCard(t,'late')).join('') : '<div class="muted">Нет «просроченных» по плану.</div>';
+  h += '</div>';
+  h += '</div>';
+
+  h += '<div class="card"><div class="section-title">↔ Передачи между людьми (что кого блокирует)</div>';
+  if (!handoffsU.length) h += '<div class="muted">Нет близких handoff.</div>';
+  for (const {from,to} of handoffsU){
+    h += '<div class="handoff">'+
+      '<span class="chip" style="background:'+BC[from.block]+'">'+from.block+'</span>'+
+      '<span class="who">'+esc(from._fio)+'</span>'+
+      '<span class="muted">'+from.wbs+' · до '+fmtY(from.finish)+'</span>'+
+      '<span class="arr">→</span>'+
+      '<span class="chip" style="background:'+BC[to.block]+'">'+to.block+'</span>'+
+      '<span class="who">'+esc(to._fio)+'</span>'+
+      '<span class="muted">'+to.wbs+' · с '+fmtY(to.start)+'</span>'+
+      '</div>';
+  }
+  h += '<div class="note">Стрелка: исполнитель A завершает задачу → B не может начать свою, пока A не отдаст результат.</div></div>';
+
+  nowPan.innerHTML = h;
+})();
+
+// ---- BLOCK TABS ----
+for (const b of BLOCKS){
+  const id = 'blk_'+b;
+  const tab = addTab(id, BSHORT[b], {block:true, color:BHEX[b]});
+  const pan = addPanel(id);
+  const tasks = DATA.tasks.filter(t => t.block===b).sort((a,c)=>parseD(a.start)-parseD(c.start) || a.wbs.localeCompare(c.wbs));
+  const peopleIn = PEOPLE_ORDER.filter(k => tasks.some(t => t._role===k));
+  const hours = tasks.reduce((s,t)=>s+t.work,0);
+  const dl = DATA.deadlines[b];
+  const last = tasks.reduce((m,t)=> parseD(t.finish)>parseD(m)?t.finish:m, tasks[0]?tasks[0].finish:'2026-07-01');
+  const dlOut = dl && (pct(dl)<=0 || pct(dl)>=100);
+
+  // rows by person for this block
+  const rows = peopleIn.map(k => {
+    const p = DATA.people[k];
+    return {key:k, label:esc(p.fio), sub:p.role, tasks: tasks.filter(t => t._role===k)};
+  });
+  // unassigned
+  const ua = tasks.filter(t => !t._role);
+  if (ua.length) rows.push({key:'_ua', label:'Не назначено', sub:'UAT bug fixes и др.', tasks:ua});
+
+  let h = '<div class="card">';
+  h += '<h2 style="color:'+BHEX[b]+'">'+esc(DATA.block_name[b])+'</h2>';
+  h += '<div class="kpi">';
+  h += '<div class="box"><div class="n">'+tasks.length+'</div><div class="l">Задач</div></div>';
+  h += '<div class="box"><div class="n">'+hours+'</div><div class="l">Часов (plan)</div></div>';
+  h += '<div class="box"><div class="n">'+peopleIn.length+'</div><div class="l">Участников</div></div>';
+  h += '<div class="box"><div class="n">'+fmtY(dl)+'</div><div class="l">Дедлайн доработки</div></div>';
+  h += '<div class="box"><div class="n">'+fmtY(last)+'</div><div class="l">Последний finish в плане</div></div>';
+  h += '</div>';
+  if (dlOut) h += '<div class="note">Дедлайн '+fmtY(dl)+' вне горизонта гантта (июль–дек 2026) — на диаграмме не рисуется, план команды завершается раньше.</div>';
+  h += '</div>';
+
+  h += '<div class="card"><h2>Гантт по доработке + зависимости</h2>';
+  h += '<div class="toggle-row">';
+  h += '<label><input type="radio" name="arr_'+b+'" value="all" checked> Все стрелки</label>';
+  h += '<label><input type="radio" name="arr_'+b+'" value="cross"> Только между людьми</label>';
+  h += '<label><input type="radio" name="arr_'+b+'" value="none"> Без стрелок</label>';
+  h += '</div>';
+  h += '<div id="gantt_'+b+'">'+buildGantt(rows,{arrows:'all', deadlines:[b], id:'gw_'+b, barLabel:'wbs'})+'</div>';
+  h += '<div class="note">Пунктир цвета доработки — дедлайн. Стрелка от конца предшественника к началу зависимой задачи.</div></div>';
+
+  // dependency list
+  const edges = [];
+  for (const t of tasks){
+    for (const pred of (t.preds||[])){
+      const from = byWbs[pred[0]];
+      if (!from) continue;
+      edges.push({from, to:t, cross:isCrossPerson(from,t), type:pred[1]});
+    }
+  }
+  h += '<div class="card"><h2>Что что блокирует</h2>';
+  if (!edges.length) h += '<div class="muted">Нет зависимостей внутри/на вход.</div>';
+  else {
+    h += '<ul class="dep-list">';
+    for (const e of edges){
+      const mark = e.cross ? ' <b style="color:var(--dep)">↔ handoff</b>' : '';
+      h += '<li><b>'+e.from.wbs+'</b> '+esc(e.from._fio)+' <span class="arr" style="color:var(--dep)">→</span> <b>'+e.to.wbs+'</b> '+esc(e.to._fio)+
+        ' <span class="muted">('+fmt(e.from.finish)+' → '+fmt(e.to.start)+')</span>'+mark+'</li>';
+    }
+    h += '</ul>';
+  }
+  h += '</div>';
+
+  // route list
+  h += '<div class="card"><h2>Задачи доработки</h2><ol class="route">';
+  let num=0;
+  for (const t of tasks){
+    num++;
+    let dep='';
+    if (t.preds && t.preds.length){
+      dep = '<div class="rdep">⬅ ждёт: '+t.preds.map(p=>{
+        const pr=byWbs[p[0]];
+        return (pr?pr.wbs+' ('+pr._fio+')':p[0]);
+      }).join(', ')+'</div>';
+    }
+    const suc = successors(t.wbs);
+    let blk='';
+    if (suc.length){
+      blk = '<div class="rdep">➡ блокирует: '+suc.map(s=>s.wbs+' ('+s._fio+')').join(', ')+'</div>';
+    }
+    h += '<li><div class="rnum" style="background:'+BC[b]+'">'+num+'</div>'+
+      '<div class="rbody" style="border-left-color:'+BC[b]+'">'+
+      '<div class="rtitle">'+esc(t.name)+'</div>'+
+      '<div class="rmeta">'+esc(t._fio)+' · '+fmtY(t.start)+' — '+fmtY(t.finish)+' · '+t.work+' ч · WBS '+t.wbs+'</div>'+
+      dep+blk+'</div></li>';
+  }
+  h += '</ol></div>';
+
+  pan.innerHTML = h;
+
+  pan.querySelectorAll('input[name="arr_'+b+'"]').forEach(inp => {
+    inp.onchange = () => {
+      const mode = pan.querySelector('input[name="arr_'+b+'"]:checked').value;
+      document.getElementById('gantt_'+b).innerHTML = buildGantt(rows,{arrows:mode, deadlines:[b], id:'gw_'+b, barLabel:'wbs'});
+      scheduleArrowDraw();
+    };
+  });
+}
+
+// ---- PERSON TABS ----
+for (const k of PEOPLE_ORDER){
+  const p = DATA.people[k];
+  const id = 'p_'+k.replace(/\s/g,'_');
+  addTab(id, p.fio.split(' ')[0]+(p.fio.split(' ')[1]?' '+p.fio.split(' ')[1][0]+'.':''));
+  const pan = addPanel(id);
+  let h = '<div class="card"><b style="font-size:16px">'+esc(p.fio)+'</b> · <span style="color:var(--muted)">'+esc(p.role)+'</span>';
+  h += '<div class="pinfo" style="margin-top:6px">Доработки: ';
+  for (const b of p.blocks) h += '<span class="chip" style="background:'+BC[b]+'">'+BSHORT[b]+'</span>';
+  h += ' · задач: '+p.tasks.length+' · часов: '+p.tasks.reduce((s,t)=>s+t.work,0)+'</div>';
+
+  // mini gantt for person
+  h += buildGantt([{key:k,label:esc(p.fio),sub:'',tasks:p.tasks}], {arrows:'none', deadlines:p.blocks, id:'pg_'+id, barLabel:'block'});
+  h += '<div class="note" style="margin-bottom:12px">На личном маршруте стрелки не рисуются (одна дорожка). Зависимости — в тексте ниже.</div>';
+
   let lastBlock=null, num=0;
-  h+='<ol class="route">';
-  for(const t of p.tasks){
-    if(t.block!==lastBlock){
-      h+='</ol><div class="blockhdr" style="background:'+BC[t.block]+'">'+DATA.block_name[t.block]+'</div><ol class="route">';
-      lastBlock=t.block;
+  h += '<ol class="route">';
+  for (const t of p.tasks){
+    if (t.block!==lastBlock){
+      h += '</ol><div class="blockhdr" style="background:'+BC[t.block]+'">'+esc(DATA.block_name[t.block])+'</div><ol class="route">';
+      lastBlock = t.block;
     }
     num++;
     let dep='';
-    if(t.ext.length){
-      dep='<div class="rdep">⚠ ждёт: '+t.ext.map(e=>'задачу '+e.wbs+' ('+e.who+')').join(', ')+'</div>';
+    if (t.ext && t.ext.length){
+      dep = '<div class="rdep">⚠ ждёт: '+t.ext.map(e=>'задачу '+e.wbs+' ('+e.who+')').join(', ')+'</div>';
+    } else if (t.preds && t.preds.length){
+      const cross = t.preds.map(pr=>{
+        const pred=byWbs[pr[0]];
+        if (!pred || pred._fio===p.fio) return null;
+        return pred.wbs+' ('+pred._fio+')';
+      }).filter(Boolean);
+      if (cross.length) dep = '<div class="rdep">⚠ ждёт: '+cross.join(', ')+'</div>';
     }
-    h+='<li><div class="rnum" style="background:'+BC[t.block]+'">'+num+'</div>'+
-       '<div class="rbody" style="border-left-color:'+BC[t.block]+'">'+
-       '<div class="rtitle">'+t.name+'</div>'+
-       '<div class="rmeta">'+fmtY(t.start)+' — '+fmtY(t.finish)+' · '+t.work+' ч · WBS '+t.wbs+'</div>'+dep+'</div></li>';
+    const suc = successors(t.wbs).filter(s => s._fio !== p.fio);
+    let blk='';
+    if (suc.length) blk = '<div class="rdep">➡ отдаёт дальше: '+suc.map(s=>s.wbs+' ('+s._fio+')').join(', ')+'</div>';
+    h += '<li><div class="rnum" style="background:'+BC[t.block]+'">'+num+'</div>'+
+      '<div class="rbody" style="border-left-color:'+BC[t.block]+'">'+
+      '<div class="rtitle">'+esc(t.name)+'</div>'+
+      '<div class="rmeta">'+fmtY(t.start)+' — '+fmtY(t.finish)+' · '+t.work+' ч · WBS '+t.wbs+'</div>'+dep+blk+'</div></li>';
   }
-  h+='</ol></div>';
-  pan.innerHTML=h;
+  h += '</ol></div>';
+  pan.innerHTML = h;
 }
 
-// theme toggle
-const themeBtn=document.getElementById('themeBtn');
+// theme
+const themeBtn = document.getElementById('themeBtn');
 function applyTheme(t){
-  if(t==='dark'){document.documentElement.setAttribute('data-theme','dark');themeBtn.textContent='☀️ Светлая тема';}
-  else{document.documentElement.removeAttribute('data-theme');themeBtn.textContent='🌙 Тёмная тема';}
-  try{localStorage.setItem('vor_theme',t);}catch(e){}
+  if (t==='dark'){ document.documentElement.setAttribute('data-theme','dark'); themeBtn.textContent='☀️ Светлая тема'; }
+  else { document.documentElement.removeAttribute('data-theme'); themeBtn.textContent='🌙 Тёмная тема'; }
+  try{ localStorage.setItem('vor_theme',t); }catch(e){}
+  scheduleArrowDraw();
 }
-themeBtn.onclick=()=>applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
+themeBtn.onclick = () => applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
 let saved=null;
-try{saved=localStorage.getItem('vor_theme');}catch(e){}
-if(saved) applyTheme(saved);
-else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark');
+try{ saved=localStorage.getItem('vor_theme'); }catch(e){}
+if (saved) applyTheme(saved);
+else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark');
 
-// tooltip
-const tip=document.getElementById('tip');
-document.addEventListener('mouseover',e=>{
-  const b=e.target.closest('.gbar');
-  if(b){tip.innerHTML=b.dataset.tip;tip.style.display='block';}
+// tooltips
+const tip = document.getElementById('tip');
+document.addEventListener('mouseover', e => {
+  const b = e.target.closest('.gbar');
+  if (b){ tip.innerHTML = b.dataset.tip; tip.style.display='block'; }
   else tip.style.display='none';
 });
-document.addEventListener('mousemove',e=>{
-  tip.style.left=Math.min(window.innerWidth-400,e.clientX+14)+'px';
-  tip.style.top=(e.clientY+16)+'px';
+document.addEventListener('mousemove', e => {
+  tip.style.left = Math.min(window.innerWidth-420, e.clientX+14)+'px';
+  tip.style.top = (e.clientY+16)+'px';
 });
+
+// redraw arrows on resize / first paint
+window.addEventListener('resize', scheduleArrowDraw);
+scheduleArrowDraw();
+// late paint after fonts/layout
+setTimeout(scheduleArrowDraw, 100);
+setTimeout(scheduleArrowDraw, 400);
 </script>
 </body>
 </html>
