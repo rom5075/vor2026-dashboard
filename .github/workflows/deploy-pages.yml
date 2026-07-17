@@ -1,0 +1,57 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build site
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          # Source of truth: versioned dashboard file (fallback to index.html)
+          if [ -f "VOR2026_team_map_v14_3.html" ]; then
+            cp "VOR2026_team_map_v14_3.html" _site/index.html
+          elif [ -f "index.html" ]; then
+            cp index.html _site/index.html
+          else
+            echo "No dashboard HTML found" >&2
+            exit 1
+          fi
+          # Optional assets (css/js/img) if added later
+          for f in favicon.ico robots.txt; do
+            [ -f "$f" ] && cp "$f" _site/
+          done
+          echo "Site files:"
+          ls -la _site
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
