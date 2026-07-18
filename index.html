@@ -17,6 +17,7 @@
   --border:#ddd;--border2:#e2e2e2;--track:#FAFAFC;--tabbg:#fff;--tabborder:#ccc;
   --accent:#2F5496;--dep:#B34700;--tipbg:#222;--tiptext:#fff;--hover:#222;
   --arrow:#6B7280;--ok:#2E7D32;--warn:#E65100;--late:#C62828;
+  --gnamew:180px;color-scheme:light;
 }
 [data-theme="dark"]{
   --b1:#5B8DEF;--b2:#6FA85A;--b3:#D4A72C;--b4:#E07B39;--b5:#9AA0A6;
@@ -24,15 +25,17 @@
   --border:#3A3F47;--border2:#3A3F47;--track:#262B33;--tabbg:#1F232B;--tabborder:#3A3F47;
   --accent:#5B8DEF;--dep:#F0A05A;--tipbg:#E8EAED;--tiptext:#15171C;--hover:#fff;
   --arrow:#9AA0A6;--ok:#81C784;--warn:#FFB74D;--late:#EF9A9A;
+  color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);padding:18px;transition:background .2s,color .2s}
 h1{font-size:21px;margin-bottom:4px}
 .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
 .tabs-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
 .tabs-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .tabs-label{font-size:12px;font-weight:700;color:var(--muted);margin-right:4px;white-space:nowrap;text-transform:uppercase;letter-spacing:.02em}
-.tab{padding:7px 14px;border-radius:6px;background:var(--tabbg);border:1px solid var(--tabborder);cursor:pointer;font-size:13px;user-select:none;color:var(--text)}
+.tab{padding:7px 14px;border-radius:6px;background:var(--tabbg);border:1px solid var(--tabborder);cursor:pointer;font-size:13px;user-select:none;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .tab.btab{border-left:4px solid #999}
 .panel{display:none}
@@ -49,12 +52,14 @@ table.who th{background:var(--accent);color:#fff}
 .gantt{position:relative;overflow-x:auto}
 .gwrap{position:relative;min-width:1500px}
 .grow{display:flex;align-items:center;height:34px;position:relative}
-.gname{width:180px;min-width:180px;font-size:12.5px;font-weight:600;padding-right:8px;line-height:1.25}
+.gname{width:var(--gnamew);min-width:var(--gnamew);font-size:12.5px;font-weight:600;padding-right:8px;line-height:1.25;position:sticky;left:0;z-index:9;background:var(--card);align-self:stretch;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--border)}
 .gname small{display:block;font-weight:500;color:var(--muted);font-size:10.5px}
 .gtrack{position:relative;flex:1;height:26px;background:var(--track);border-radius:4px}
 .gbar{position:absolute;height:22px;top:2px;border-radius:4px;font-size:10px;color:#fff;overflow:hidden;white-space:nowrap;padding:4px 4px 0;cursor:default;z-index:2}
 .gbar:hover{outline:2px solid var(--hover);z-index:5}
-.months{display:flex;margin-left:180px;font-size:11px;color:var(--meta);border-bottom:1px solid var(--border);margin-bottom:6px}
+.months{display:flex;font-size:11px;color:var(--meta);border-bottom:1px solid var(--border);margin-bottom:6px}
+.months .mspacer{position:sticky;left:0;z-index:9;min-width:var(--gnamew);background:var(--card)}
+.mcells{display:flex;flex:1;min-width:0}
 .mcell{border-left:1px solid var(--border);padding:2px 4px}
 .vline{position:absolute;top:22px;bottom:0;width:0;z-index:8;pointer-events:none}
 .vline.today{border-left:2px solid #E53935;opacity:.95}
@@ -75,7 +80,7 @@ table.who th{background:var(--accent);color:#fff}
 .rdep{font-size:11.5px;color:var(--dep);margin-top:3px}
 .blockhdr{font-size:13px;font-weight:700;margin:14px 0 8px;padding:6px 10px;border-radius:5px;color:#fff}
 .pinfo{font-size:13px;color:var(--meta);margin-bottom:10px}
-.tip{position:fixed;display:none;background:var(--tipbg);color:var(--tiptext);padding:8px 10px;border-radius:6px;font-size:12px;max-width:400px;z-index:99;pointer-events:none;line-height:1.35}
+.tip{position:fixed;display:none;background:var(--tipbg);color:var(--tiptext);padding:8px 10px;border-radius:6px;font-size:12px;max-width:min(400px,calc(100vw - 20px));z-index:99;pointer-events:none;line-height:1.35}
 .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
 .kpi .box{background:var(--track);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
 .kpi .n{font-size:22px;font-weight:700;line-height:1.1}
@@ -106,6 +111,41 @@ table.who th{background:var(--accent);color:#fff}
 .dep-list{font-size:12.5px}
 .dep-list li{margin:4px 0 4px 18px}
 .section-title{font-size:14px;font-weight:700;margin:4px 0 8px}
+.tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.who th.cw-role{width:260px}
+table.who th.cw-n{width:90px}
+/* ---- мобильная верстка (iPhone и др.) ---- */
+@media (max-width:640px){
+  :root{--gnamew:132px}
+  body{padding:10px}
+  h1{font-size:17px}
+  .sub{font-size:12px;margin-bottom:10px}
+  .card{padding:12px 10px;margin-bottom:10px}
+  .tabs-wrap{gap:6px;margin-bottom:10px}
+  .tabs-row{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:2px 0}
+  .tabs-row::-webkit-scrollbar{display:none}
+  .tabs-label{position:sticky;left:0;z-index:2;background:var(--bg);align-self:stretch;display:flex;align-items:center;padding-right:8px;margin-right:0}
+  .tab{padding:9px 13px;flex:0 0 auto;white-space:nowrap}
+  .kpi{grid-template-columns:repeat(2,1fr);gap:8px}
+  .kpi .n{font-size:19px}
+  .gwrap{min-width:1150px}
+  .gname{font-size:11.5px}
+  .gname small{font-size:9.5px}
+  table.who{min-width:520px;font-size:12px}
+  table.who th,table.who td{padding:6px 8px}
+  table.who th.cw-role{width:170px}
+  table.who th.cw-n{width:56px}
+  .vline span{max-width:130px}
+  .now-toolbar .hint{flex-basis:100%}
+  .btn-link{padding:8px 12px}
+  .taskrow .hide-cb,.handoff .hide-cb{width:19px;height:19px}
+  .handoff{font-size:12px}
+  .rnum{min-width:24px;height:24px;font-size:11px}
+  .rbody{padding:7px 10px}
+  .route li{gap:8px}
+  .legend{gap:8px}
+  .dl-legend{font-size:11px;gap:6px 10px}
+}
 </style>
 </head>
 <body>
@@ -232,8 +272,13 @@ function addPanel(id){
   return p;
 }
 function activateTab(id){
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.id===id));
+  document.querySelectorAll('.tab').forEach(x => {
+    const on = x.dataset.id===id;
+    x.classList.toggle('active', on);
+    if (on && x.scrollIntoView) x.scrollIntoView({block:'nearest', inline:'nearest'});
+  });
   document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id===id));
+  scrollGanttsToToday(document.getElementById(id));
 }
 
 // ---- gantt builder ----
@@ -243,13 +288,13 @@ const MONTHS = [
 ];
 
 function monthsHeaderHtml(){
-  let h = '<div class="months">';
+  let h = '<div class="months"><div class="mspacer"></div><div class="mcells">';
   for (let i=0;i<MONTHS.length;i++){
     const st = pct(MONTHS[i][0]);
     const en = i+1<MONTHS.length ? pct(MONTHS[i+1][0]) : 100;
     h += '<div class="mcell" style="width:'+(en-st)+'%">'+MONTHS[i][1]+'</div>';
   }
-  return h+'</div>';
+  return h+'</div></div>';
 }
 
 function vlineHtml(kind, dateStr, label, color, labelTopPx){
@@ -257,8 +302,8 @@ function vlineHtml(kind, dateStr, label, color, labelTopPx){
   // allow near-edges; only skip truly outside the chart span
   if (p < 0 || p > 100) return '';
   const pClamped = Math.max(0.15, Math.min(99.85, p));
-  // align with .gname (180px) + track — use % of full wrap via calc with unit-safe form
-  const left = 'calc(180px + (100% - 180px) * '+(pClamped/100).toFixed(6)+')';
+  // align with .gname (--gnamew) + track — use % of full wrap via calc with unit-safe form
+  const left = 'calc(var(--gnamew) + (100% - var(--gnamew)) * '+(pClamped/100).toFixed(6)+')';
   const col = color || (kind==='today' ? '#E53935' : '#C00');
   let cls = 'vline dl';
   if (kind==='today') cls = 'vline today';
@@ -324,6 +369,22 @@ function todayLineHtml(){
   return vlineHtml('today', isoLocal(t), 'Сегодня '+fmt(t));
 }
 
+// автоскролл видимых ганттов к линии «сегодня» (актуально на телефоне, где чарт шире экрана)
+function scrollGanttsToToday(scope){
+  (scope || document).querySelectorAll('.gantt').forEach(g => {
+    if (g.dataset.scrolled || !g.clientWidth || g.scrollWidth <= g.clientWidth + 4) return;
+    const wrap = g.querySelector('.gwrap');
+    if (!wrap) return;
+    const p = pct(todayLocal());
+    if (p <= 0 || p >= 100) return;
+    const gn = g.querySelector('.gname');
+    const nameW = gn ? gn.offsetWidth : 180;
+    const x = nameW + (wrap.clientWidth - nameW) * p / 100;
+    g.scrollLeft = Math.max(0, x - nameW - (g.clientWidth - nameW) * 0.35);
+    g.dataset.scrolled = '1';
+  });
+}
+
 /**
  * rows: [{key, label, sub, tasks:[]}]
  * opts: {deadlines:bool|array of blocks, projectFinish:string, id, barLabel}
@@ -367,7 +428,7 @@ const ov = addPanel('ov'); ov.classList.add('active');
   let lg = '<div class="card"><h2>Кто на каких доработках задействован</h2><div class="legend">';
   for (const b of BLOCKS)
     lg += '<span class="legchip"><span class="sw" style="background:'+BC[b]+'"></span>'+esc(DATA.block_name[b])+'</span>';
-  lg += '</div><table class="who"><tr><th style="width:260px">Сотрудник</th><th>Доработки</th><th style="width:90px">Задач</th><th style="width:90px">Часы</th></tr>';
+  lg += '</div><div class="tscroll"><table class="who"><tr><th class="cw-role">Сотрудник</th><th>Доработки</th><th class="cw-n">Задач</th><th class="cw-n">Часы</th></tr>';
   for (const k of PEOPLE_ORDER){
     const p = DATA.people[k];
     let chips = '';
@@ -375,7 +436,7 @@ const ov = addPanel('ov'); ov.classList.add('active');
     const hours = p.tasks.reduce((s,t)=>s+t.work,0);
     lg += '<tr><td><b>'+esc(p.fio)+'</b><br><span style="color:var(--muted);font-size:12px">'+esc(p.role)+'</span></td><td>'+chips+'</td><td>'+p.tasks.length+'</td><td>'+hours+'</td></tr>';
   }
-  lg += '</table></div>';
+  lg += '</table></div></div>';
 
   const rows = PEOPLE_ORDER.map(k => {
     const p = DATA.people[k];
@@ -730,9 +791,11 @@ for (const k of PEOPLE_ORDER){
 
 // theme
 const themeBtn = document.getElementById('themeBtn');
+const themeMeta = document.querySelector('meta[name="theme-color"]');
 function applyTheme(t){
   if (t==='dark'){ document.documentElement.setAttribute('data-theme','dark'); themeBtn.textContent='☀️ Светлая тема'; }
   else { document.documentElement.removeAttribute('data-theme'); themeBtn.textContent='🌙 Тёмная тема'; }
+  if (themeMeta) themeMeta.setAttribute('content', t==='dark' ? '#15171C' : '#2F5496');
   try{ localStorage.setItem('vor_theme',t); }catch(e){}
 }
 themeBtn.onclick = () => applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
@@ -741,17 +804,53 @@ try{ saved=localStorage.getItem('vor_theme'); }catch(e){}
 if (saved) applyTheme(saved);
 else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) applyTheme('dark');
 
-// tooltips
+// tooltips: hover на десктопе; на таче тап по задаче закрепляет подсказку, тап мимо — закрывает
 const tip = document.getElementById('tip');
+let tipBar = null; // бар с закреплённой (тапом) подсказкой
+function placeTip(x, y){
+  // измеряем при left:8, иначе ширина fixed-блока зависит от прежнего left и клампится краем экрана
+  tip.style.left = '8px'; tip.style.top = '0px';
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let L = x + 14, T = y + 16;
+  if (L + w > window.innerWidth - 8) L = window.innerWidth - w - 8;
+  if (L < 8) L = 8;
+  if (T + h > window.innerHeight - 8) T = y - h - 12;
+  if (T < 8) T = 8;
+  tip.style.left = L + 'px';
+  tip.style.top = T + 'px';
+}
+function showTip(html, x, y){
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+  placeTip(x, y);
+}
+function hideTip(){
+  tip.style.display = 'none';
+  tipBar = null;
+}
 document.addEventListener('mouseover', e => {
+  if (tipBar) return;
   const b = e.target.closest('.gbar');
-  if (b){ tip.innerHTML = b.dataset.tip; tip.style.display='block'; }
-  else tip.style.display='none';
+  if (b) showTip(b.dataset.tip, e.clientX, e.clientY);
+  else tip.style.display = 'none';
 });
 document.addEventListener('mousemove', e => {
-  tip.style.left = Math.min(window.innerWidth-420, e.clientX+14)+'px';
-  tip.style.top = (e.clientY+16)+'px';
+  if (tipBar || tip.style.display !== 'block') return;
+  placeTip(e.clientX, e.clientY);
 });
+document.addEventListener('click', e => {
+  const b = e.target.closest('.gbar');
+  if (b){
+    if (tipBar === b){ hideTip(); return; }
+    const r = b.getBoundingClientRect();
+    showTip(b.dataset.tip, r.left, r.bottom + 4);
+    tipBar = b;
+  } else if (tipBar) hideTip();
+});
+document.addEventListener('scroll', () => { if (tipBar) hideTip(); }, true);
+
+scrollGanttsToToday(document);
+window.addEventListener('load', () => scrollGanttsToToday(document));
 </script>
 </body>
 </html>

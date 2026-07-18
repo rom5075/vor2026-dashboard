@@ -9,3 +9,6 @@ _site/
 *.local
 .env
 .env.*
+
+# Multi-AI auto-generated (local only)
+.grok/rules/01-handoff-live.md
