@@ -81,19 +81,28 @@ table.who th{background:var(--accent);color:#fff}
 .kpi .n{font-size:22px;font-weight:700;line-height:1.1}
 .kpi .l{font-size:11.5px;color:var(--muted);margin-top:3px}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
-.taskrow{border:1px solid var(--border2);border-left:4px solid #999;border-radius:6px;padding:8px 10px;margin-bottom:7px;background:var(--card)}
+.taskrow{border:1px solid var(--border2);border-left:4px solid #999;border-radius:6px;padding:8px 10px;margin-bottom:7px;background:var(--card);display:flex;gap:8px;align-items:flex-start}
+.taskrow .taskrow-body{flex:1;min-width:0}
 .taskrow .t{font-size:13px;font-weight:600}
 .taskrow .m{font-size:11.5px;color:var(--meta);margin-top:2px}
 .taskrow.late{border-left-color:var(--late)}
 .taskrow.active{border-left-color:var(--ok)}
 .taskrow.soon{border-left-color:var(--warn)}
+.taskrow.hidden-item{opacity:.55;background:var(--track)}
+.taskrow .hide-cb,.handoff .hide-cb{margin-top:2px;width:16px;height:16px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)}
 .handoff{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;margin-bottom:7px;font-size:12.5px;background:var(--track)}
 .handoff .arr{color:var(--dep);font-weight:700;font-size:16px}
 .handoff .who{font-weight:600}
+.handoff.hidden-item{opacity:.55}
 .muted{color:var(--muted);font-size:12px}
 .note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.4}
 .toggle-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:6px 0 10px;font-size:12.5px}
 .toggle-row label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.btn-link{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer;color:var(--text);background:var(--tabbg)}
+.btn-link:hover{border-color:var(--accent);color:var(--accent)}
+.btn-link.danger:hover{border-color:var(--late);color:var(--late)}
+.now-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 4px}
+.now-toolbar .hint{font-size:11.5px;color:var(--muted);flex:1;min-width:180px}
 .dep-list{font-size:12.5px}
 .dep-list li{margin:4px 0 4px 18px}
 .section-title{font-size:14px;font-weight:700;margin:4px 0 8px}
@@ -386,19 +395,39 @@ const ov = addPanel('ov'); ov.classList.add('active');
 addTab('now','Сейчас / эта неделя');
 const nowPan = addPanel('now');
 
-(function buildNow(){
+// ---- localStorage: скрытые пункты вкладки «Сейчас» (личный UI, не статус плана) ----
+const NOW_HIDE_KEY = 'vor2026_now_hidden_v1';
+const NOW_SHOW_HIDDEN_KEY = 'vor2026_now_show_hidden_v1';
+function loadNowHidden(){
+  try{
+    const raw = localStorage.getItem(NOW_HIDE_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  }catch(e){ return new Set(); }
+}
+function saveNowHidden(set){
+  try{ localStorage.setItem(NOW_HIDE_KEY, JSON.stringify([...set])); }catch(e){}
+}
+function loadShowHidden(){
+  try{ return localStorage.getItem(NOW_SHOW_HIDDEN_KEY) === '1'; }catch(e){ return false; }
+}
+function saveShowHidden(v){
+  try{ localStorage.setItem(NOW_SHOW_HIDDEN_KEY, v ? '1' : '0'); }catch(e){}
+}
+
+function renderNowTab(){
   const today = todayLocal();
   const weekEnd = new Date(today.getTime() + 7*DAY);
   const weekStart = today;
+  const hidden = loadNowHidden();
+  const showHidden = loadShowHidden();
 
-  // «Сейчас / эта неделя» — только delivery-роли; аналитиков не показываем
   function isAnalystTask(t){
     const role = t._role || '';
     if (role === 'Analyst 1' || role === 'Analyst 2') return true;
     const res = t.res || [];
     return res.some(r => r && String(r).indexOf('Analyst') === 0);
   }
-
   function overlapsWeek(t){
     const s = parseD(t.start), f = parseD(t.finish);
     return s <= weekEnd && f >= weekStart;
@@ -414,34 +443,55 @@ const nowPan = addPanel('now');
   function latePlan(t){
     return parseD(t.finish) < today;
   }
+  function taskKey(t){ return 't:'+t.wbs; }
+  function handoffKey(from, to){ return 'h:'+from.wbs+'>'+to.wbs; }
 
   const teamTasks = DATA.tasks.filter(t => !isAnalystTask(t));
-  const active = teamTasks.filter(activeToday).sort((a,b)=>parseD(a.start)-parseD(b.start));
-  const starting = teamTasks.filter(t => startsThisWeek(t) && !activeToday(t)).sort((a,b)=>parseD(a.start)-parseD(b.start));
-  const late = teamTasks.filter(latePlan).sort((a,b)=>parseD(b.finish)-parseD(a.finish));
-  // unblocked soon: preds finish before/at today and task starts this week or active
+  const activeAll = teamTasks.filter(activeToday).sort((a,b)=>parseD(a.start)-parseD(b.start));
+  const startingAll = teamTasks.filter(t => startsThisWeek(t) && !activeToday(t)).sort((a,b)=>parseD(a.start)-parseD(b.start));
+  const lateAll = teamTasks.filter(latePlan).sort((a,b)=>parseD(b.finish)-parseD(a.finish));
+
   const handoffs = [];
   for (const t of teamTasks){
     for (const pred of (t.preds||[])){
       const from = byWbs[pred[0]];
       if (!from || isAnalystTask(from)) continue;
       if (!isCrossPerson(from, t)) continue;
-      // handoff near window: pred finishes within ±14d of today or task starts this week
       const pf = parseD(from.finish);
       const ts = parseD(t.start);
       const near = Math.abs(pf - today) <= 14*DAY || (ts >= weekStart && ts <= weekEnd) || overlapsWeek(t) || overlapsWeek(from);
       if (near) handoffs.push({from, to:t});
     }
   }
-  // unique by wbs pair
   const seen = new Set();
-  const handoffsU = handoffs.filter(h => {
+  const handoffsAll = handoffs.filter(h => {
     const k = h.from.wbs+'>'+h.to.wbs;
     if (seen.has(k)) return false;
     seen.add(k); return true;
   }).sort((a,b)=>parseD(a.from.finish)-parseD(b.from.finish));
 
+  function visibleTasks(list){
+    return list.filter(t => {
+      const hid = hidden.has(taskKey(t));
+      return showHidden ? true : !hid;
+    });
+  }
+  function visibleHandoffs(list){
+    return list.filter(h => {
+      const hid = hidden.has(handoffKey(h.from, h.to));
+      return showHidden ? true : !hid;
+    });
+  }
+
+  const active = visibleTasks(activeAll);
+  const starting = visibleTasks(startingAll);
+  const late = visibleTasks(lateAll);
+  const handoffsU = visibleHandoffs(handoffsAll);
+  const hiddenCount = hidden.size;
+
   function taskCard(t, cls){
+    const key = taskKey(t);
+    const isHid = hidden.has(key);
     let dep = '';
     if (t.preds && t.preds.length){
       dep = '<div class="rdep">⬅ блокируют: '+t.preds.map(p=>{
@@ -454,38 +504,20 @@ const nowPan = addPanel('now');
     if (suc.length){
       blocks = '<div class="rdep">➡ блокирует: '+suc.map(s=>s.wbs+' · '+s._fio).join('; ')+'</div>';
     }
-    return '<div class="taskrow '+cls+'" style="border-left-color:'+(cls==='late'?'var(--late)':cls==='active'?'var(--ok)':BHEX[t.block])+
-      '"><div class="t"><span class="chip" style="background:'+BC[t.block]+'">'+t.block+'</span> '+esc(t.name)+
-      '</div><div class="m">'+esc(t._fio)+' · '+fmtY(t.start)+' — '+fmtY(t.finish)+' · '+t.work+' ч · WBS '+t.wbs+'</div>'+dep+blocks+'</div>';
+    return '<div class="taskrow '+cls+(isHid?' hidden-item':'')+'" style="border-left-color:'+(cls==='late'?'var(--late)':cls==='active'?'var(--ok)':BHEX[t.block])+
+      '" data-hide-key="'+esc(key)+'">'+
+      '<input type="checkbox" class="hide-cb" title="'+(isHid?'Вернуть в список':'Скрыть с глаз (localStorage)')+'" '+(isHid?'checked ':'')+'aria-label="Скрыть задачу">' +
+      '<div class="taskrow-body"><div class="t"><span class="chip" style="background:'+BC[t.block]+'">'+t.block+'</span> '+esc(t.name)+
+      (isHid?' <span class="muted">· скрыто</span>':'')+
+      '</div><div class="m">'+esc(t._fio)+' · '+fmtY(t.start)+' — '+fmtY(t.finish)+' · '+t.work+' ч · WBS '+t.wbs+'</div>'+dep+blocks+'</div></div>';
   }
 
-  let h = '<div class="card"><h2>Сейчас / эта неделя · '+fmtY(today)+'</h2>';
-  h += '<div class="kpi">';
-  h += '<div class="box"><div class="n">'+active.length+'</div><div class="l">В плане на сегодня</div></div>';
-  h += '<div class="box"><div class="n">'+starting.length+'</div><div class="l">Стартуют на неделе</div></div>';
-  h += '<div class="box"><div class="n">'+late.length+'</div><div class="l">План finish &lt; сегодня</div></div>';
-  h += '<div class="box"><div class="n">'+handoffsU.length+'</div><div class="l">Handoff между людьми (±2 нед.)</div></div>';
-  h += '</div>';
-  h += '<div class="note">Только delivery-роли (без аналитиков). Статусы «готово/в работе» пока не ведутся — блоки по датам плана. «Просрочено» = плановый finish уже прошёл.</div></div>';
-
-  h += '<div class="cols">';
-  h += '<div class="card"><div class="section-title" style="color:var(--ok)">▶ В работе (по плану сегодня)</div>';
-  h += active.length ? active.map(t=>taskCard(t,'active')).join('') : '<div class="muted">Нет задач с датами, покрывающими сегодня.</div>';
-  h += '</div>';
-
-  h += '<div class="card"><div class="section-title" style="color:var(--warn)">⏭ Стартуют на этой неделе</div>';
-  h += starting.length ? starting.map(t=>taskCard(t,'soon')).join('') : '<div class="muted">Нет новых стартов на 7 дней.</div>';
-  h += '</div>';
-
-  h += '<div class="card"><div class="section-title" style="color:var(--late)">⏰ План finish уже прошёл</div>';
-  h += late.length ? late.map(t=>taskCard(t,'late')).join('') : '<div class="muted">Нет «просроченных» по плану.</div>';
-  h += '</div>';
-  h += '</div>';
-
-  h += '<div class="card"><div class="section-title">↔ Передачи между людьми (что кого блокирует)</div>';
-  if (!handoffsU.length) h += '<div class="muted">Нет близких handoff.</div>';
-  for (const {from,to} of handoffsU){
-    h += '<div class="handoff">'+
+  function handoffCard(h){
+    const key = handoffKey(h.from, h.to);
+    const isHid = hidden.has(key);
+    const {from,to} = h;
+    return '<div class="handoff'+(isHid?' hidden-item':'')+'" data-hide-key="'+esc(key)+'">'+
+      '<input type="checkbox" class="hide-cb" title="'+(isHid?'Вернуть':'Скрыть handoff')+'" '+(isHid?'checked ':'')+'aria-label="Скрыть handoff">'+
       '<span class="chip" style="background:'+BC[from.block]+'">'+from.block+'</span>'+
       '<span class="who">'+esc(from._fio)+'</span>'+
       '<span class="muted">'+from.wbs+' · до '+fmtY(from.finish)+'</span>'+
@@ -493,12 +525,75 @@ const nowPan = addPanel('now');
       '<span class="chip" style="background:'+BC[to.block]+'">'+to.block+'</span>'+
       '<span class="who">'+esc(to._fio)+'</span>'+
       '<span class="muted">'+to.wbs+' · с '+fmtY(to.start)+'</span>'+
+      (isHid?'<span class="muted">· скрыто</span>':'')+
       '</div>';
   }
-  h += '<div class="note">Связка: исполнитель A завершает задачу, B не может начать свою, пока A не отдаст результат.</div></div>';
 
-  nowPan.innerHTML = h;
-})();
+  let html = '<div class="card"><h2>Сейчас / эта неделя · '+fmtY(today)+'</h2>';
+  html += '<div class="kpi">';
+  html += '<div class="box"><div class="n">'+active.length+(active.length!==activeAll.length?'<span class="muted" style="font-size:14px">/'+activeAll.length+'</span>':'')+'</div><div class="l">В плане на сегодня</div></div>';
+  html += '<div class="box"><div class="n">'+starting.length+(starting.length!==startingAll.length?'<span class="muted" style="font-size:14px">/'+startingAll.length+'</span>':'')+'</div><div class="l">Стартуют на неделе</div></div>';
+  html += '<div class="box"><div class="n">'+late.length+(late.length!==lateAll.length?'<span class="muted" style="font-size:14px">/'+lateAll.length+'</span>':'')+'</div><div class="l">План finish &lt; сегодня</div></div>';
+  html += '<div class="box"><div class="n">'+handoffsU.length+(handoffsU.length!==handoffsAll.length?'<span class="muted" style="font-size:14px">/'+handoffsAll.length+'</span>':'')+'</div><div class="l">Handoff (±2 нед.)</div></div>';
+  html += '<div class="box"><div class="n">'+hiddenCount+'</div><div class="l">Скрыто (localStorage)</div></div>';
+  html += '</div>';
+  html += '<div class="now-toolbar">';
+  html += '<label><input type="checkbox" id="nowShowHidden"'+(showHidden?' checked':'')+'> Показать скрытые</label>';
+  html += '<button type="button" class="btn-link danger" id="nowClearHidden"'+(hiddenCount?'':' disabled')+'>Сбросить все галочки ('+hiddenCount+')</button>';
+  html += '<span class="hint">Галочка = «убрать с глаз» на этом браузере/ПК. Не меняет план MS Project и не видно коллегам.</span>';
+  html += '</div>';
+  html += '<div class="note">Только delivery-роли (без аналитиков). Блоки по датам плана. «Просрочено» = плановый finish уже прошёл.</div></div>';
+
+  html += '<div class="cols">';
+  html += '<div class="card"><div class="section-title" style="color:var(--ok)">▶ В работе (по плану сегодня)</div>';
+  html += active.length ? active.map(t=>taskCard(t,'active')).join('') : '<div class="muted">'+(activeAll.length?'Все скрыты галочками.':'Нет задач с датами, покрывающими сегодня.')+'</div>';
+  html += '</div>';
+
+  html += '<div class="card"><div class="section-title" style="color:var(--warn)">⏭ Стартуют на этой неделе</div>';
+  html += starting.length ? starting.map(t=>taskCard(t,'soon')).join('') : '<div class="muted">'+(startingAll.length?'Все скрыты галочками.':'Нет новых стартов на 7 дней.')+'</div>';
+  html += '</div>';
+
+  html += '<div class="card"><div class="section-title" style="color:var(--late)">⏰ План finish уже прошёл</div>';
+  html += late.length ? late.map(t=>taskCard(t,'late')).join('') : '<div class="muted">'+(lateAll.length?'Все скрыты галочками.':'Нет «просроченных» по плану.')+'</div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '<div class="card"><div class="section-title">↔ Передачи между людьми (что кого блокирует)</div>';
+  if (!handoffsU.length) html += '<div class="muted">'+(handoffsAll.length?'Все handoff скрыты.':'Нет близких handoff.')+'</div>';
+  else html += handoffsU.map(handoffCard).join('');
+  html += '<div class="note">Связка: A завершает → B не стартует, пока не отдадут результат. Галочка слева скрывает строку.</div></div>';
+
+  nowPan.innerHTML = html;
+
+  nowPan.querySelectorAll('.hide-cb').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const row = cb.closest('[data-hide-key]');
+      if (!row) return;
+      const key = row.getAttribute('data-hide-key');
+      const set = loadNowHidden();
+      if (cb.checked) set.add(key); else set.delete(key);
+      saveNowHidden(set);
+      renderNowTab();
+    });
+  });
+  const showCb = document.getElementById('nowShowHidden');
+  if (showCb){
+    showCb.addEventListener('change', () => {
+      saveShowHidden(showCb.checked);
+      renderNowTab();
+    });
+  }
+  const clearBtn = document.getElementById('nowClearHidden');
+  if (clearBtn){
+    clearBtn.addEventListener('click', () => {
+      if (!loadNowHidden().size) return;
+      if (!confirm('Сбросить все скрытия на вкладке «Сейчас»?')) return;
+      saveNowHidden(new Set());
+      renderNowTab();
+    });
+  }
+}
+renderNowTab();
 
 // ---- BLOCK TABS ----
 for (const b of BLOCKS){
