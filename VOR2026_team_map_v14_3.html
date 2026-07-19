@@ -601,9 +601,9 @@ function renderNowTab(){
   html += '<div class="now-toolbar">';
   html += '<label><input type="checkbox" id="nowShowHidden"'+(showHidden?' checked':'')+'> Показать скрытые</label>';
   html += '<button type="button" class="btn-link danger" id="nowClearHidden"'+(hiddenCount?'':' disabled')+'>Сбросить все галочки ('+hiddenCount+')</button>';
-  html += '<span class="hint">Галочка = «убрать с глаз» на этом браузере/ПК. Не меняет план MS Project и не видно коллегам.</span>';
+  html += '<span class="hint">Галочка = «убрать с глаз» на этом браузере/ПК.</span>';
   html += '</div>';
-  html += '<div class="note">Только delivery-роли (без аналитиков). Блоки по датам плана. «Просрочено» = плановый finish уже прошёл.</div></div>';
+  html += '</div>';
 
   html += '<div class="cols">';
   html += '<div class="card"><div class="section-title" style="color:var(--ok)">▶ В работе (по плану сегодня)</div>';
