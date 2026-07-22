@@ -2,9 +2,9 @@
 
 > Current multi-AI status. Standing rules: `AGENTS.md`.
 
-**Updated:** 2026-07-21  
+**Updated:** 2026-07-22  
 **By:** Claude  
-**Session goal:** Тимофеев выбыл — его задачи переданы Егоровой
+**Session goal:** PWA (офлайн + установка на телефон), переключатель горизонта гантта, строка «данные от»
 
 ---
 
@@ -14,12 +14,18 @@ Maintain the public VOR 2026 team map dashboard on GitHub Pages.
 
 ## Done since last handoff
 
-- Root `HANDOFF.md` created for multi-AI continuity
-- Live product path: edit HTML → `./publish.sh "…"` → origin/main
-- Мобильная вёрстка (iPhone): media-блок ≤640px; sticky-колонка имён в гантте (`--gnamew`);
-  автоскролл ганттов к линии «сегодня»; тач-тултипы (тап = закрепить, мимо/скролл = закрыть,
-  кламп к вьюпорту); таблица «кто на чём» в `.tscroll`; табы горизонтальным скролл-рядом;
-  KPI 2 колонки; theme-color меняется с темой
+- PWA: `manifest.webmanifest`, `sw.js` (страница network-first + офлайн из кэша, статика
+  stale-while-revalidate), иконки `icon-192/512/maskable` из favicon.svg; регистрация SW
+  только на http(s). Файлы добавлены в deploy-pages.yml
+- Переключатель горизонта гантта «Квартал / Полгода / Весь план» (ряд «Горизонт»,
+  localStorage `vor_zoom`, default полгода): D0/D1/MONTHS динамические, окно клампится
+  к границам плана, бары вне окна не рисуются, заголовок карты и тултипы кнопок — по окну.
+  Панели пересобираются через renderAll()
+- Строка «данные от» в шапке = `DATA.meta.updated` (обновлять при каждой правке данных)
+- **Ветка:** всё выше — на `claude/dashboard-expansion-ideas-x7pwdj`, на Pages попадёт после merge в `main`
+- Ранее: root `HANDOFF.md` для multi-AI; путь публикации edit HTML → `./publish.sh` → origin/main;
+  мобильная вёрстка (iPhone): media ≤640px, sticky имена в гантте, автоскролл к «сегодня»,
+  тач-тултипы, `.tscroll`, табы скролл-рядом, KPI 2 колонки, theme-color по теме
 
 ## In progress
 
