@@ -40,8 +40,9 @@ jobs:
             echo "No dashboard HTML found" >&2
             exit 1
           fi
-          # Static assets (favicon, etc.)
-          for f in favicon.ico favicon.svg favicon-16.png favicon-32.png apple-touch-icon.png robots.txt; do
+          # Static assets (favicon, PWA manifest/иконки, service worker, etc.)
+          for f in favicon.ico favicon.svg favicon-16.png favicon-32.png apple-touch-icon.png robots.txt \
+                   manifest.webmanifest sw.js icon-192.png icon-512.png icon-maskable-512.png; do
             [ -f "$f" ] && cp "$f" _site/
           done
           echo "Site files:"

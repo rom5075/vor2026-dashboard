@@ -36,7 +36,10 @@ git push origin main
 |------|------|
 | `VOR2026_team_map_v14_3.html` | **Источник правды** — правьте его |
 | `index.html` | Локальная копия для превью (обновляется скриптом `publish.sh`) |
+| `manifest.webmanifest`, `sw.js`, `icon-*.png` | PWA: установка на домашний экран и офлайн-режим |
 | `.github/workflows/deploy-pages.yml` | Пайплайн: push → Pages |
+
+При правке задач/дат обновляйте `meta.updated` в `DATA` (в шапке показывается как «данные от»).
 
 Пайплайн кладёт исходник в `_site/index.html` и публикует через GitHub Pages (Actions).
 
