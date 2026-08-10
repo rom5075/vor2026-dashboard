@@ -14,7 +14,7 @@
 :root{
   --bg:#F5F6FA;--card:#FFFFFF;--text:#222222;--muted:#666666;
   --border:#DADDE5;--accent:#2F5496;--accent-soft:#EAF0FA;
-  --late:#C62828;--late-soft:#FDECEC;--warn:#9A6700;--warn-soft:#FFF5D6;
+  --late:#C62828;--late-soft:#FDECEC;--warn:#805600;--warn-soft:#FFF5D6;
   --ok:#2E7D32;--ok-soft:#EAF5EB;
   --b1:#4472C4;--b2:#548235;--b3:#BF8F00;--b4:#C55A11;--b5:#7F7F7F;
   --shadow:0 12px 32px rgba(33,45,72,.10);color-scheme:light;
@@ -65,7 +65,7 @@ h1{max-width:780px;margin:0;font-size:clamp(32px,5vw,62px);line-height:.98;lette
 .deadline-table td+td{border-left:1px solid var(--border)}
 .deadline-table td:first-child{padding-left:22px}
 .deadline-table td:first-child::before{content:"";position:absolute;inset:0 auto 0 0;width:6px;background:var(--block-color)}
-.work-id{display:inline-flex;align-items:center;justify-content:center;min-width:35px;height:24px;margin-bottom:6px;border:1px solid color-mix(in srgb,var(--block-color),transparent 58%);border-radius:5px;color:var(--block-color);font-size:12px;font-weight:800}
+.work-id{display:inline-flex;align-items:center;justify-content:center;min-width:35px;height:24px;margin-bottom:6px;border:1px solid var(--block-color);border-radius:5px;color:var(--text);font-size:12px;font-weight:800}
 .work-name{font-size:14px;font-weight:750;line-height:1.32}
 .date{display:block;font:750 clamp(20px,2vw,27px)/1 Bahnschrift,"Arial Narrow",Arial,sans-serif;letter-spacing:.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
 td[data-plan="operational"]{background:color-mix(in srgb,var(--accent-soft),transparent 15%)}

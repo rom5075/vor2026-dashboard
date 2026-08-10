@@ -2,9 +2,9 @@
 
 > Current multi-AI status. Standing rules: `AGENTS.md`.
 
-**Updated:** 2026-07-22  
-**By:** Claude  
-**Session goal:** PWA (офлайн + установка на телефон), переключатель горизонта гантта, строка «данные от»
+**Updated:** 2026-08-10
+**By:** Codex
+**Session goal:** отдельная страница Prod-дедлайнов по оперативному, v14 и клиентскому планам
 
 ---
 
@@ -14,6 +14,12 @@ Maintain the public VOR 2026 team map dashboard on GitHub Pages.
 
 ## Done since last handoff
 
+- Отдельная `deadlines.html`: пять доработок в порядке ближайшего оперативного Prod (Д4→Д5→Д2→Д1→Д3), три версии плана и пометки запаса/просрочки из `VOR2026_DEADLINES_MATRIX.md`
+- На странице сохранены предупреждения: Д1 превышает клиентский срок на 14 дней; даты Д2/Д3 устарели до пересчёта после ухода Java-разработчика
+- Основной дашборд содержит ссылку «Дедлайны»; страница дедлайнов — обратную ссылку
+- GitHub Pages собирается через `scripts/build_site.sh`; deploy включает обе HTML-страницы
+- PWA cache `v2` хранит навигации по собственным URL, поэтому `deadlines.html` больше не может подменить офлайн-копию главной
+- Добавлены Python/Node-контракты данных, сборки, темы и service worker
 - PWA: `manifest.webmanifest`, `sw.js` (страница network-first + офлайн из кэша, статика
   stale-while-revalidate), иконки `icon-192/512/maskable` из favicon.svg; регистрация SW
   только на http(s). Файлы добавлены в deploy-pages.yml
@@ -22,7 +28,6 @@ Maintain the public VOR 2026 team map dashboard on GitHub Pages.
   к границам плана, бары вне окна не рисуются, заголовок карты и тултипы кнопок — по окну.
   Панели пересобираются через renderAll()
 - Строка «данные от» в шапке = `DATA.meta.updated` (обновлять при каждой правке данных)
-- **Ветка:** всё выше — на `claude/dashboard-expansion-ideas-x7pwdj`, на Pages попадёт после merge в `main`
 - Ранее: root `HANDOFF.md` для multi-AI; путь публикации edit HTML → `./publish.sh` → origin/main;
   мобильная вёрстка (iPhone): media ≤640px, sticky имена в гантте, автоскролл к «сегодня»,
   тач-тултипы, `.tscroll`, табы скролл-рядом, KPI 2 колонки, theme-color по теме
@@ -43,9 +48,9 @@ Maintain the public VOR 2026 team map dashboard on GitHub Pages.
 
 ## Next 3 actions
 
-1. Read `AGENTS.md` before any UI edit
-2. Edit source HTML (see `VOR2026_team_map_v14_3.html` / publish flow)
-3. Run `./publish.sh "short description"` and report SHA + Actions + site URL
+1. При изменении дедлайнов сначала обновить и перепроверить `VOR2026_DEADLINES_MATRIX.md`
+2. Запустить `python3 -m unittest discover -s tests -v` и Node-тесты service worker
+3. Выполнить `./publish.sh "short description"` и проверить обе публичные страницы
 
 ## Key paths
 
@@ -54,6 +59,9 @@ Maintain the public VOR 2026 team map dashboard on GitHub Pages.
 | `AGENTS.md` | Definition of done = push |
 | `VOR2026_team_map_v14_3.html` | Primary dashboard source (publish syncs → `index.html`) |
 | `index.html` | Published entry (synced by publish.sh) |
+| `deadlines.html` | Three-plan Prod deadline page |
+| `VOR2026_DEADLINES_MATRIX.md` | Deadline values, deltas and caveats |
+| `scripts/build_site.sh` | GitHub Pages artifact assembly |
 | `publish.sh` | commit + push pipeline |
 | Site | https://rom5075.github.io/vor2026-dashboard/ |
 
