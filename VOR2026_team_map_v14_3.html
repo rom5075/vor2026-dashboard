@@ -38,6 +38,8 @@ h1{font-size:21px;margin-bottom:4px}
 .tabs-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .tabs-label{font-size:12px;font-weight:700;color:var(--muted);margin-right:4px;white-space:nowrap;text-transform:uppercase;letter-spacing:.02em}
 .tab{padding:7px 14px;border-radius:6px;background:var(--tabbg);border:1px solid var(--tabborder);cursor:pointer;font:inherit;font-size:13px;user-select:none;color:var(--text);-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.header-actions{display:flex;align-items:center;gap:6px}
+.header-link{text-decoration:none}
 .tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .tab:focus-visible,.btn-link:focus-visible,.hide-cb:focus-visible{outline:3px solid var(--dep);outline-offset:2px}
 [data-theme="dark"] .tab.active,[data-theme="dark"] table.who th,[data-theme="dark"] .chip,[data-theme="dark"] .gbar{color:#15171C}
@@ -156,7 +158,10 @@ table.who th.cw-n{width:90px}
 <body>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
   <h1>VOR 2026 — карта работ команды</h1>
-  <button type="button" class="tab theme-toggle" id="themeBtn" aria-pressed="false">🌙 Тёмная тема</button>
+  <div class="header-actions">
+    <a class="tab header-link" href="deadlines.html" aria-label="Открыть таблицу дедлайнов">Дедлайны</a>
+    <button type="button" class="tab theme-toggle" id="themeBtn" aria-pressed="false">🌙 Тёмная тема</button>
+  </div>
 </div>
 <div class="sub">Рабочий план v14 (07.07), задачи Тимофеева переданы Егоровой · данные от <b id="dataDate">—</b> · общий финиш плана <b id="projFin">—</b> · дедлайн доработки = finish последней задачи блока · линия «сегодня»</div>
 <div class="tabs-wrap">

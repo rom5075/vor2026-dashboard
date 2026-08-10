@@ -1,10 +1,14 @@
 from html.parser import HTMLParser
 from pathlib import Path
+import subprocess
+import tempfile
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE = ROOT / "deadlines.html"
+BUILD_SCRIPT = ROOT / "scripts" / "build_site.sh"
+DASHBOARD = ROOT / "VOR2026_team_map_v14_3.html"
 
 EXPECTED = {
     "D4": ("18.08.2026", "14.08.2026", "24.09.2026", "+4 дн", "+37 дн"),
@@ -66,11 +70,14 @@ class DeadlinePageParser(HTMLParser):
 
 
 class DeadlinePageTest(unittest.TestCase):
+    def parse_html(self, path):
+        parser = DeadlinePageParser()
+        parser.feed(path.read_text(encoding="utf-8"))
+        return parser
+
     def parse_page(self):
         self.assertTrue(PAGE.exists(), "deadlines.html must be created")
-        parser = DeadlinePageParser()
-        parser.feed(PAGE.read_text(encoding="utf-8"))
-        return parser
+        return self.parse_html(PAGE)
 
     def test_shows_all_prod_dates_in_delivery_order(self):
         parser = self.parse_page()
@@ -101,6 +108,31 @@ class DeadlinePageTest(unittest.TestCase):
         links = [(link["href"], " ".join(link["text"])) for link in parser.links]
 
         self.assertIn(("./", "Назад к карте работ"), links)
+
+    def test_dashboard_links_to_deadline_page(self):
+        parser = self.parse_html(DASHBOARD)
+        links = [(link["href"], " ".join(link["text"])) for link in parser.links]
+
+        self.assertIn(("deadlines.html", "Дедлайны"), links)
+
+    def test_site_build_contains_both_pages(self):
+        self.assertTrue(BUILD_SCRIPT.exists(), "scripts/build_site.sh must be created")
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / "site"
+            subprocess.run(
+                ["bash", str(BUILD_SCRIPT), str(output)],
+                cwd=ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            index = output / "index.html"
+            deadlines = output / "deadlines.html"
+            self.assertTrue(index.exists())
+            self.assertTrue(deadlines.exists())
+            self.assertIn("VOR 2026 — карта работ команды", index.read_text(encoding="utf-8"))
+            self.assertIn("VOR 2026 — сроки сдачи по трём планам", deadlines.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

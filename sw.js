@@ -2,10 +2,11 @@
 // Страница отдаётся network-first (онлайн всегда свежая, офлайн — из кэша),
 // статика — из кэша с фоновым обновлением, поэтому менять VERSION при каждой
 // публикации не нужно; поднимайте её только при изменении списка ASSETS.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'vor2026-' + VERSION;
 const ASSETS = [
   './',
+  'deadlines.html',
   'manifest.webmanifest',
   'favicon.svg',
   'favicon.ico',
@@ -35,14 +36,16 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
 
-  // Навигация (сам дашборд): сеть в приоритете, офлайн — кэш.
+  // Навигация: сеть в приоритете, каждая страница кэшируется под своим URL.
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).then(r => {
-        const copy = r.clone();
-        caches.open(CACHE).then(c => c.put('./', copy));
+        if (r && r.ok) {
+          const copy = r.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
         return r;
-      }).catch(() => caches.match('./'))
+      }).catch(() => caches.match(req).then(hit => hit || caches.match('./')))
     );
     return;
   }
