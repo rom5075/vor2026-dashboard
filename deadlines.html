@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOR 2026 — сроки сдачи по трём планам</title>
+<meta name="description" content="Сроки выхода пяти доработок VOR 2026 на Prod: оперативный план, план v14 для руководства и клиентский план SST.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2F5496">
+<style>
+:root{
+  --bg:#F5F6FA;--card:#FFFFFF;--text:#222222;--muted:#666666;
+  --border:#DADDE5;--accent:#2F5496;--accent-soft:#EAF0FA;
+  --late:#C62828;--late-soft:#FDECEC;--warn:#9A6700;--warn-soft:#FFF5D6;
+  --ok:#2E7D32;--ok-soft:#EAF5EB;
+  --b1:#4472C4;--b2:#548235;--b3:#BF8F00;--b4:#C55A11;--b5:#7F7F7F;
+  --shadow:0 12px 32px rgba(33,45,72,.10);color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:#15171C;--card:#1F232B;--text:#E8EAED;--muted:#B1B6BE;
+  --border:#3A3F47;--accent:#79A5FF;--accent-soft:#252F44;
+  --late:#FFAAA5;--late-soft:#3B2427;--warn:#FFD37A;--warn-soft:#3B3321;
+  --ok:#9AD7A0;--ok-soft:#23372A;
+  --b1:#5B8DEF;--b2:#6FA85A;--b3:#D4A72C;--b4:#E07B39;--b5:#9AA0A6;
+  --shadow:0 12px 32px rgba(0,0,0,.28);color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Arial,sans-serif;transition:background .2s,color .2s}
+a{color:inherit}
+.page{width:min(1220px,calc(100% - 36px));margin:0 auto;padding:22px 0 38px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:30px}
+.nav-link,.theme-toggle{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 13px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--text);font:600 13px/1.2 "Segoe UI",Arial,sans-serif;text-decoration:none;cursor:pointer}
+.nav-link:hover,.theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.nav-link:focus-visible,.theme-toggle:focus-visible{outline:3px solid var(--warn);outline-offset:3px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:24px;margin-bottom:20px}
+.eyebrow{margin:0 0 7px;color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+h1{max-width:780px;margin:0;font-size:clamp(32px,5vw,62px);line-height:.98;letter-spacing:-.04em}
+.hero-copy{max-width:690px;margin:13px 0 0;color:var(--muted);font-size:15px;line-height:1.5}
+.matrix-date{align-self:start;padding:10px 0 0;color:var(--muted);font-size:12px;text-align:right;white-space:nowrap}
+.matrix-date strong{display:block;margin-top:2px;color:var(--text);font:700 18px/1.2 Bahnschrift,"Arial Narrow",Arial,sans-serif;font-variant-numeric:tabular-nums}
+.alerts{display:grid;grid-template-columns:1.1fr .9fr;gap:10px;margin:0 0 14px}
+.alert{border:1px solid var(--border);border-left:5px solid;border-radius:8px;padding:11px 13px;background:var(--card);font-size:13px;line-height:1.45}
+.alert strong{font-weight:800}
+.alert-critical{border-left-color:var(--late);background:var(--late-soft)}
+.alert-stale{border-left-color:var(--warn);background:var(--warn-soft)}
+.ledger{overflow:hidden;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow)}
+.deadline-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+.deadline-table caption{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.deadline-table thead th{padding:13px 15px;background:var(--accent);color:#fff;text-align:left;font-size:11px;line-height:1.3;letter-spacing:.055em;text-transform:uppercase}
+[data-theme="dark"] .deadline-table thead th{color:#11151C}
+.deadline-table thead th:first-child{width:34%}
+.deadline-table thead th:not(:first-child){width:22%}
+.deadline-table tbody tr{--block-color:var(--b5)}
+.deadline-table tbody tr[data-block="D1"]{--block-color:var(--b1)}
+.deadline-table tbody tr[data-block="D2"]{--block-color:var(--b2)}
+.deadline-table tbody tr[data-block="D3"]{--block-color:var(--b3)}
+.deadline-table tbody tr[data-block="D4"]{--block-color:var(--b4)}
+.deadline-table tbody tr[data-block="D5"]{--block-color:var(--b5)}
+.deadline-table td{position:relative;padding:17px 15px;border-top:1px solid var(--border);vertical-align:middle}
+.deadline-table tbody tr:first-child td{border-top:0}
+.deadline-table td+td{border-left:1px solid var(--border)}
+.deadline-table td:first-child{padding-left:22px}
+.deadline-table td:first-child::before{content:"";position:absolute;inset:0 auto 0 0;width:6px;background:var(--block-color)}
+.work-id{display:inline-flex;align-items:center;justify-content:center;min-width:35px;height:24px;margin-bottom:6px;border:1px solid color-mix(in srgb,var(--block-color),transparent 58%);border-radius:5px;color:var(--block-color);font-size:12px;font-weight:800}
+.work-name{font-size:14px;font-weight:750;line-height:1.32}
+.date{display:block;font:750 clamp(20px,2vw,27px)/1 Bahnschrift,"Arial Narrow",Arial,sans-serif;letter-spacing:.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+td[data-plan="operational"]{background:color-mix(in srgb,var(--accent-soft),transparent 15%)}
+td[data-plan="operational"] .date{color:var(--accent)}
+.plan-note{display:block;margin-top:7px;color:var(--muted);font-size:11px;line-height:1.25}
+.status{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:4px 7px;border-radius:5px;font-size:11px;font-weight:750;line-height:1.2}
+.status-late{background:var(--late-soft);color:var(--late)}
+.status-warn{background:var(--warn-soft);color:var(--warn)}
+.status-ok{background:var(--ok-soft);color:var(--ok)}
+.source-notes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:var(--card)}
+.source-item{font-size:12px;line-height:1.45;color:var(--muted)}
+.source-item strong{display:block;color:var(--text);font-size:12px}
+.footnote{margin:12px 2px 0;color:var(--muted);font-size:11px;line-height:1.5}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media (max-width:760px){
+  .hero{grid-template-columns:1fr}.matrix-date{text-align:left;padding:0}.alerts{grid-template-columns:1fr}
+  .source-notes{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .page{width:min(100% - 20px,520px);padding-top:10px}.topbar{margin-bottom:24px}.nav-link,.theme-toggle{min-height:44px}
+  h1{font-size:38px}.hero-copy{font-size:14px}.ledger{overflow:visible;background:transparent;border:0;border-radius:0;box-shadow:none}
+  .deadline-table,.deadline-table tbody{display:block}.deadline-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  .deadline-table tbody{display:grid;gap:10px}.deadline-table tbody tr{display:grid;grid-template-columns:1fr 1fr;background:var(--card);border:1px solid var(--border);border-left:6px solid var(--block-color);border-radius:9px;overflow:hidden;box-shadow:0 4px 14px rgba(33,45,72,.07)}
+  .deadline-table td{display:block;padding:12px;border:0;border-top:1px solid var(--border)}
+  .deadline-table td+td{border-left:0}.deadline-table td:first-child{grid-column:1/-1;padding:13px 14px;border-top:0}.deadline-table td:first-child::before{display:none}
+  .deadline-table td[data-plan="operational"]{grid-column:1/-1}.deadline-table td[data-plan="client"]{border-left:1px solid var(--border)}
+  .deadline-table td[data-plan]::before{content:attr(data-label);display:block;margin-bottom:7px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.055em;text-transform:uppercase}
+  .date{font-size:23px}.status{font-size:10.5px}.source-notes{padding:12px 14px}
+}
+@media (max-width:390px){
+  .topbar{align-items:stretch}.nav-link,.theme-toggle{padding-inline:10px;font-size:12px}.deadline-table tbody tr{grid-template-columns:1fr}
+  .deadline-table td[data-plan="operational"],.deadline-table td[data-plan="client"],.deadline-table td:first-child{grid-column:1}.deadline-table td[data-plan="client"]{border-left:0}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="topbar" aria-label="Навигация по VOR 2026">
+    <a class="nav-link" href="./">Назад к карте работ</a>
+    <button type="button" class="theme-toggle" id="themeBtn" aria-pressed="false">Тёмная тема</button>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <p class="eyebrow">VOR 2026 · контроль сдачи</p>
+      <h1>Когда сдаёмся</h1>
+      <p class="hero-copy">Пять доработок, три версии плана и только финальный выход на Prod. Ближайшая оперативная дата стоит первой.</p>
+    </div>
+    <div class="matrix-date">Матрица составлена<strong>10.08.2026</strong></div>
+  </header>
+
+  <section class="alerts" aria-label="Критические оговорки">
+    <div class="alert alert-critical"><strong>Д1 превышает обязательство перед заказчиком.</strong> Оперативный финиш 12.11.2026 против клиентского 29.10.2026 — превышен срок заказчика на 14 календарных дней.</div>
+    <div class="alert alert-stale"><strong>Д2 и Д3 требуют пересчёта.</strong> Оперативный план не учитывает уход Java-разработчика; эти даты считаются устаревшими до пересчёта и могут сдвинуться вправо.</div>
+  </section>
+
+  <main>
+    <div class="ledger">
+      <table class="deadline-table" aria-describedby="sourceNotes">
+        <caption>Финиш доработок VOR 2026 на Prod по трём версиям плана</caption>
+        <thead>
+          <tr>
+            <th scope="col">Доработка</th>
+            <th scope="col">Оперативный план</th>
+            <th scope="col">Руководству v14</th>
+            <th scope="col">Клиент SST</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-block="D4">
+            <td><span class="work-id">Д4</span><div class="work-name">Procedure Execution Status<br>(Confirm Inspection Block)</div></td>
+            <td data-plan="operational" data-label="Оперативный план"><span class="date">18.08.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
+            <td data-plan="v14" data-label="Руководству v14"><span class="date">14.08.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> +4 дн · просрочка</span></td>
+            <td data-plan="client" data-label="Клиент SST"><span class="date">24.09.2026</span><span class="status status-ok"><span aria-hidden="true">🟢</span> +37 дн · запас</span></td>
+          </tr>
+          <tr data-block="D5">
+            <td><span class="work-id">Д5</span><div class="work-name">Freespan Length Calculation<br>Upload Mechanism</div></td>
+            <td data-plan="operational" data-label="Оперативный план"><span class="date">27.08.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
+            <td data-plan="v14" data-label="Руководству v14"><span class="date">25.08.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> +2 дн · просрочка</span></td>
+            <td data-plan="client" data-label="Клиент SST"><span class="date">29.09.2026</span><span class="status status-ok"><span aria-hidden="true">🟢</span> +33 дн · запас</span></td>
+          </tr>
+          <tr data-block="D2">
+            <td><span class="work-id">Д2</span><div class="work-name">External Inspection<br>Data Integrity Check</div></td>
+            <td data-plan="operational" data-label="Оперативный план"><span class="date">16.10.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
+            <td data-plan="v14" data-label="Руководству v14"><span class="date">16.10.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> 0 дн · запаса нет</span></td>
+            <td data-plan="client" data-label="Клиент SST"><span class="date">29.12.2026</span><span class="status status-ok"><span aria-hidden="true">🟢</span> +74 дн · запас</span></td>
+          </tr>
+          <tr data-block="D1">
+            <td><span class="work-id">Д1</span><div class="work-name">Update Displacement<br>Generation Logic</div></td>
+            <td data-plan="operational" data-label="Оперативный план"><span class="date">12.11.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
+            <td data-plan="v14" data-label="Руководству v14"><span class="date">21.10.2026</span><span class="status status-late"><span aria-hidden="true">🔴</span> +22 дн · просрочка</span></td>
+            <td data-plan="client" data-label="Клиент SST"><span class="date">29.10.2026</span><span class="status status-late"><span aria-hidden="true">🔴</span> −14 дн · превышен срок</span></td>
+          </tr>
+          <tr data-block="D3">
+            <td><span class="work-id">Д3</span><div class="work-name">Development of Anomaly<br>Archiving Mechanism</div></td>
+            <td data-plan="operational" data-label="Оперативный план"><span class="date">24.12.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
+            <td data-plan="v14" data-label="Руководству v14"><span class="date">01.12.2026</span><span class="status status-late"><span aria-hidden="true">🔴</span> +23 дн · просрочка</span></td>
+            <td data-plan="client" data-label="Клиент SST"><span class="date">26.02.2027</span><span class="status status-ok"><span aria-hidden="true">🟢</span> +64 дн · запас</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="source-notes" id="sourceNotes" aria-label="Источники версий плана">
+      <div class="source-item"><strong>Оперативный</strong>Текущая правда команды после каскада от 21.07.2026.</div>
+      <div class="source-item"><strong>Руководству v14</strong>Внутренняя контрольная версия IBS от 07.07.2026.</div>
+      <div class="source-item"><strong>Клиент SST</strong>Клиентская версия плана от 08.07.2026.</div>
+    </aside>
+    <p class="footnote">Все даты — финиш задачи Deployment on Prod в MS Project, в рабочих днях календаря соответствующего плана. Отклонения указаны в календарных днях.</p>
+  </main>
+</div>
+<script>
+const themeBtn = document.getElementById('themeBtn');
+const themeMeta = document.querySelector('meta[name="theme-color"]');
+function applyTheme(theme, persist){
+  const dark = theme === 'dark';
+  if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  else document.documentElement.removeAttribute('data-theme');
+  themeBtn.textContent = dark ? 'Светлая тема' : 'Тёмная тема';
+  themeBtn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  if (themeMeta) themeMeta.setAttribute('content', dark ? '#15171C' : '#2F5496');
+  if (persist){ try{ localStorage.setItem('vor_theme', dark ? 'dark' : 'light'); }catch(e){} }
+}
+let savedTheme = '';
+try{ savedTheme = localStorage.getItem('vor_theme') || ''; }catch(e){}
+if (savedTheme !== 'dark' && savedTheme !== 'light'){
+  savedTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+applyTheme(savedTheme, false);
+themeBtn.addEventListener('click', () => applyTheme(document.documentElement.hasAttribute('data-theme') ? 'light' : 'dark', true));
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
