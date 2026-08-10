@@ -118,7 +118,7 @@ td[data-plan="operational"] .date{color:var(--accent)}
   </header>
 
   <section class="alerts" aria-label="Критические оговорки">
-    <div class="alert alert-critical"><strong>Д1 превышает обязательство перед заказчиком.</strong> Оперативный финиш 12.11.2026 против клиентского 29.10.2026 — превышен срок заказчика на 14 календарных дней.</div>
+    <div class="alert alert-critical"><strong>Д1 подогнана вплотную к сроку заказчика.</strong> Оперативная дата выставлена в 29.10.2026 = клиентский срок: Д4 и Д5 закрыты досрочно, часть работ Д1 уже сделана, остаток цепочки БД сжат на 10 рабочих дней. Резерва нет — любой сдвиг вправо даёт просрочку перед заказчиком.</div>
     <div class="alert alert-stale"><strong>Д2 и Д3 требуют пересчёта.</strong> Оперативный план не учитывает уход Java-разработчика; эти даты считаются устаревшими до пересчёта и могут сдвинуться вправо.</div>
   </section>
 
@@ -155,9 +155,9 @@ td[data-plan="operational"] .date{color:var(--accent)}
           </tr>
           <tr data-block="D1">
             <td><span class="work-id">Д1</span><div class="work-name">Update Displacement<br>Generation Logic</div></td>
-            <td data-plan="operational" data-label="Оперативный план"><span class="date">12.11.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
-            <td data-plan="v14" data-label="Руководству v14"><span class="date">21.10.2026</span><span class="status status-late"><span aria-hidden="true">🔴</span> +22 дн · просрочка</span></td>
-            <td data-plan="client" data-label="Клиент SST"><span class="date">29.10.2026</span><span class="status status-late"><span aria-hidden="true">🔴</span> −14 дн · превышен срок</span></td>
+            <td data-plan="operational" data-label="Оперативный план"><span class="date">29.10.2026</span><span class="plan-note">Подогнано под клиентский срок: остаток цепочки БД сжат на 10 рабочих дней</span></td>
+            <td data-plan="v14" data-label="Руководству v14"><span class="date">21.10.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> +8 дн · просрочка</span></td>
+            <td data-plan="client" data-label="Клиент SST"><span class="date">29.10.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> 0 дн · запаса нет</span></td>
           </tr>
           <tr data-block="D3">
             <td><span class="work-id">Д3</span><div class="work-name">Development of Anomaly<br>Archiving Mechanism</div></td>
