@@ -75,6 +75,13 @@ td[data-plan="operational"] .date{color:var(--accent)}
 .status-late{background:var(--late-soft);color:var(--late)}
 .status-warn{background:var(--warn-soft);color:var(--warn)}
 .status-ok{background:var(--ok-soft);color:var(--ok)}
+.work-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.work-head .work-id{margin-bottom:0}
+.done-badge{display:inline-flex;align-items:center;min-height:24px;padding:3px 8px;border-radius:5px;background:var(--ok-soft);color:var(--ok);font-size:11px;font-weight:750;line-height:1.2}
+.done-block{margin-top:28px}
+.done-block h2{margin:0 0 6px;color:var(--ok);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+.done-lead{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.45}
+.deadline-table tbody tr[data-status="done"]{opacity:.82}
 .source-notes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;padding:14px 16px;border:1px solid var(--border);border-radius:8px;background:var(--card)}
 .source-item{font-size:12px;line-height:1.45;color:var(--muted)}
 .source-item strong{display:block;color:var(--text);font-size:12px}
@@ -82,7 +89,7 @@ td[data-plan="operational"] .date{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 @media (max-width:760px){
   .hero{grid-template-columns:1fr}.matrix-date{text-align:left;padding:0}.alerts{grid-template-columns:1fr}
-  .source-notes{grid-template-columns:1fr}
+  .source-notes{grid-template-columns:1fr}.done-block{margin-top:22px}
 }
 @media (max-width:640px){
   .page{width:min(100% - 20px,520px);padding-top:10px}.topbar{margin-bottom:24px}.nav-link,.theme-toggle{min-height:44px}
@@ -112,13 +119,13 @@ td[data-plan="operational"] .date{color:var(--accent)}
     <div>
       <p class="eyebrow">VOR 2026 · контроль сдачи</p>
       <h1>Когда сдаёмся</h1>
-      <p class="hero-copy">Пять доработок, три версии плана и только финальный выход на Prod. Ближайшая оперативная дата стоит первой.</p>
+      <p class="hero-copy">Три доработки ещё в работе, две уже сданы. Сверху — ближайшая оперативная дата, внизу — выполненные.</p>
     </div>
     <div class="matrix-date">Матрица составлена<strong>10.08.2026</strong></div>
   </header>
 
   <section class="alerts" aria-label="Критические оговорки">
-    <div class="alert alert-critical"><strong>Д1 подогнана вплотную к сроку заказчика.</strong> Оперативная дата выставлена в 29.10.2026 = клиентский срок: Д4 и Д5 закрыты досрочно, часть работ Д1 уже сделана, остаток цепочки БД сжат на 10 рабочих дней. Резерва нет — любой сдвиг вправо даёт просрочку перед заказчиком.</div>
+    <div class="alert alert-critical"><strong>Д1 подогнана вплотную к сроку заказчика.</strong> Оперативная дата выставлена в 29.10.2026 = клиентский срок: Д4 и Д5 выполнены, часть работ Д1 уже сделана, остаток цепочки БД сжат на 10 рабочих дней. Резерва нет — любой сдвиг вправо даёт просрочку перед заказчиком.</div>
     <div class="alert alert-stale"><strong>Д2 и Д3 требуют пересчёта.</strong> Оперативный план не учитывает уход Java-разработчика; эти даты считаются устаревшими до пересчёта и могут сдвинуться вправо.</div>
   </section>
 
@@ -135,18 +142,6 @@ td[data-plan="operational"] .date{color:var(--accent)}
           </tr>
         </thead>
         <tbody>
-          <tr data-block="D4">
-            <td><span class="work-id">Д4</span><div class="work-name">Procedure Execution Status<br>(Confirm Inspection Block)</div></td>
-            <td data-plan="operational" data-label="Оперативный план"><span class="date">18.08.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
-            <td data-plan="v14" data-label="Руководству v14"><span class="date">14.08.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> +4 дн · просрочка</span></td>
-            <td data-plan="client" data-label="Клиент SST"><span class="date">24.09.2026</span><span class="status status-ok"><span aria-hidden="true">🟢</span> +37 дн · запас</span></td>
-          </tr>
-          <tr data-block="D5">
-            <td><span class="work-id">Д5</span><div class="work-name">Freespan Length Calculation<br>Upload Mechanism</div></td>
-            <td data-plan="operational" data-label="Оперативный план"><span class="date">27.08.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
-            <td data-plan="v14" data-label="Руководству v14"><span class="date">25.08.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> +2 дн · просрочка</span></td>
-            <td data-plan="client" data-label="Клиент SST"><span class="date">29.09.2026</span><span class="status status-ok"><span aria-hidden="true">🟢</span> +33 дн · запас</span></td>
-          </tr>
           <tr data-block="D2">
             <td><span class="work-id">Д2</span><div class="work-name">External Inspection<br>Data Integrity Check</div></td>
             <td data-plan="operational" data-label="Оперативный план"><span class="date">16.10.2026</span><span class="plan-note">Текущий прогноз команды</span></td>
@@ -168,6 +163,44 @@ td[data-plan="operational"] .date{color:var(--accent)}
         </tbody>
       </table>
     </div>
+
+    <section class="done-block" aria-labelledby="doneHeading">
+      <h2 id="doneHeading">Выполнено</h2>
+      <p class="done-lead">Д4 и Д5 сданы. Даты ниже — исторический финиш на Prod, не текущий прогноз.</p>
+      <div class="ledger">
+        <table class="deadline-table">
+          <caption>Выполненные доработки VOR 2026</caption>
+          <thead>
+            <tr>
+              <th scope="col">Доработка</th>
+              <th scope="col">Оперативный план</th>
+              <th scope="col">Руководству v14</th>
+              <th scope="col">Клиент SST</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-block="D4" data-status="done">
+              <td>
+                <div class="work-head"><span class="work-id">Д4</span><span class="done-badge">Выполнено</span></div>
+                <div class="work-name">Procedure Execution Status<br>(Confirm Inspection Block)</div>
+              </td>
+              <td data-plan="operational" data-label="Оперативный план"><span class="date">18.08.2026</span><span class="plan-note">Сдано</span></td>
+              <td data-plan="v14" data-label="Руководству v14"><span class="date">14.08.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> +4 дн · просрочка</span></td>
+              <td data-plan="client" data-label="Клиент SST"><span class="date">24.09.2026</span><span class="status status-ok"><span aria-hidden="true">🟢</span> +37 дн · запас</span></td>
+            </tr>
+            <tr data-block="D5" data-status="done">
+              <td>
+                <div class="work-head"><span class="work-id">Д5</span><span class="done-badge">Выполнено</span></div>
+                <div class="work-name">Freespan Length Calculation<br>Upload Mechanism</div>
+              </td>
+              <td data-plan="operational" data-label="Оперативный план"><span class="date">27.08.2026</span><span class="plan-note">Сдано</span></td>
+              <td data-plan="v14" data-label="Руководству v14"><span class="date">25.08.2026</span><span class="status status-warn"><span aria-hidden="true">🟡</span> +2 дн · просрочка</span></td>
+              <td data-plan="client" data-label="Клиент SST"><span class="date">29.09.2026</span><span class="status status-ok"><span aria-hidden="true">🟢</span> +33 дн · запас</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     <aside class="source-notes" id="sourceNotes" aria-label="Источники версий плана">
       <div class="source-item"><strong>Оперативный</strong>Текущая правда команды после каскада от 21.07.2026.</div>

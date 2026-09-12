@@ -24,17 +24,24 @@ class DeadlinePageParser(HTMLParser):
         super().__init__()
         self.rows = {}
         self.row_order = []
+        self.statuses = {}
+        self.headings = []
         self.links = []
         self.text = []
         self._block = None
         self._plan = None
         self._link = None
+        self._heading = None
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag in {"h1", "h2"}:
+            self._heading = {"tag": tag, "text": []}
+            self.headings.append(self._heading)
         if tag == "tr" and attrs.get("data-block"):
             self._block = attrs["data-block"]
             self.row_order.append(self._block)
+            self.statuses[self._block] = attrs.get("data-status", "open")
             self.rows[self._block] = {}
         elif tag == "td" and self._block and attrs.get("data-plan"):
             self._plan = attrs["data-plan"]
@@ -50,6 +57,8 @@ class DeadlinePageParser(HTMLParser):
             self._block = None
         elif tag == "a":
             self._link = None
+        elif tag in {"h1", "h2"}:
+            self._heading = None
 
     def handle_data(self, data):
         value = " ".join(data.split())
@@ -60,6 +69,8 @@ class DeadlinePageParser(HTMLParser):
             self.rows[self._block][self._plan].append(value)
         if self._link is not None:
             self._link["text"].append(value)
+        if self._heading is not None:
+            self._heading["text"].append(value)
 
     def cell_text(self, block, plan):
         return " ".join(self.rows[block][plan])
@@ -82,11 +93,25 @@ class DeadlinePageTest(unittest.TestCase):
     def test_shows_all_prod_dates_in_delivery_order(self):
         parser = self.parse_page()
 
-        self.assertEqual(parser.row_order, ["D4", "D5", "D2", "D1", "D3"])
+        self.assertEqual(parser.row_order, ["D2", "D1", "D3", "D4", "D5"])
         for block, (operational, v14, client, _, _) in EXPECTED.items():
             self.assertIn(operational, parser.cell_text(block, "operational"))
             self.assertIn(v14, parser.cell_text(block, "v14"))
             self.assertIn(client, parser.cell_text(block, "client"))
+
+    def test_moves_completed_blocks_to_done_section(self):
+        parser = self.parse_page()
+        heading_text = [" ".join(item["text"]) for item in parser.headings]
+
+        self.assertEqual(parser.statuses["D2"], "open")
+        self.assertEqual(parser.statuses["D1"], "open")
+        self.assertEqual(parser.statuses["D3"], "open")
+        self.assertEqual(parser.statuses["D4"], "done")
+        self.assertEqual(parser.statuses["D5"], "done")
+        self.assertIn("Выполнено", heading_text)
+        self.assertIn("Выполнено", parser.page_text)
+        self.assertIn("Сдано", parser.cell_text("D4", "operational"))
+        self.assertIn("Сдано", parser.cell_text("D5", "operational"))
 
     def test_preserves_matrix_risk_labels(self):
         parser = self.parse_page()
